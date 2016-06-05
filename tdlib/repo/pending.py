@@ -36,8 +36,11 @@ class Pending:
     def __contains__(self, taskid):
         return taskid in self._data
 
+    def __iter__(self):
+        return iter(self._data)
+
     def __delitem__(self, taskid):
-        del self._data[self_data.index[taskid]]
+        del self._data[self._data.index(taskid)]
         self._write()
 
     def add(self, taskid):

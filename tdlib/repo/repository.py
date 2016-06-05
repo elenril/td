@@ -20,6 +20,7 @@ import os
 import os.path
 import pygit2
 import shutil
+import uuid
 
 from . import pending
 from . import task
@@ -53,6 +54,9 @@ class Repository:
     """a Pending instance identifying pending tasks"""
     _pending = None
 
+    """List of entries for the current commit"""
+    _commit_msgs = None
+
     """Task fields to pack into JSON"""
     _field_maps = ('text',)
 
@@ -75,8 +79,12 @@ class Repository:
             if not os.path.isdir(dirpath):
                 os.mkdir(dirpath)
 
-        self._pending = pending.Pending(os.path.join(path, 'pending'))
-        self._path    = path
+        self._pending     = pending.Pending(os.path.join(path, 'pending'))
+        self._path        = path
+        self._commit_msgs = []
+
+    def __del__(self):
+        self.commit_changes()
 
     def _commit_index(self, message):
         parent  = self._repo.head.peel()
@@ -94,6 +102,17 @@ class Repository:
             if val is not None:
                 data[fm] = val
         return data
+
+    def commit_changes(self, msg_title = 'Untitled commit'):
+        commit = False
+        for filepath, flags in self._repo.status().items():
+            if flags & pygit2.GIT_STATUS_INDEX_MODIFIED:
+                commit = True
+                break
+        if commit:
+            commit_msg = msg_title + '\n\n' + '\n'.join(self._commit_msgs)
+            self._commit_index(commit_msg)
+            self._commit_msgs = []
 
     def task_write(self, task):
         path = os.path.join(self._path, 'tasks', task.uuid)
@@ -117,26 +136,46 @@ class Repository:
             self._repo.index.add(os.path.relpath(self._pending.path, self._path))
 
         self._repo.index.write()
-        commit = True
-        for filepath, flags in self._repo.status().items():
-            if filepath == path and flags & pygit2.GIT_STATUS_INDEX_MODIFIED:
-                commit = True
-                break
-        if commit:
-            self._commit_index('Update task %s' % task.uuid)
+        self._commit_msgs.append('Update task %s' % task.uuid)
 
-    def _task_read(self, stuff):
-        self._data = json.load(fp, object_pairs_hook = collections.OrderedDict)
+    def _task_list(self):
+        ret = []
+        for f in os.listdir(os.path.join(self._path, 'tasks')):
+            try:
+                u = uuid.UUID(f)
+                ret.append(f)
+            except ValueError:
+                pass
+        return ret
 
-        for fm in self._field_maps:
-            if fm in self._data:
-                setattr(self, fm, self._data[fm])
+    def _task_load(self, task_uuid):
+        t = task.Task()
 
-    def task_open(self, querystr):
-        raise NotImplementedError
+        with open(os.path.join(self._path, 'tasks', task_uuid), 'rt') as task_fp:
+            data = json.load(task_fp)
+
+            for fm in self._field_maps:
+                if fm in data:
+                    setattr(t, fm, data[fm])
+
+        t.uuid      = task_uuid
+        t.completed = not task_uuid in self._pending
+
+        return t
+
+    def _task_match(self, t, querystr):
+        if t.text and querystr in t.text:
+            return True
+
+        return False
 
     def tasks_filter(self, querystr):
-        raise NotImplementedError
+        ret = []
+        for task_uuid in self._pending:
+            t = self._task_load(task_uuid)
+            if self._task_match(t, querystr):
+                ret.append(t)
+        return ret
 
 def init(path):
     """

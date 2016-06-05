@@ -26,6 +26,7 @@ def cmd_execute(conf, args, repo):
         t.text = ' '.join(args.args)
 
     repo.task_write(t)
+    repo.commit_changes('add %s' % t.text)
 
 def add_init_parser(subparsers):
     parser = subparsers.add_parser('add')

@@ -13,14 +13,27 @@
 # You should have received a copy of the GNU General Public License along
 # with td. If not, see <http://www.gnu.org/licenses/>.
 
-from . import add
-from . import done
-from . import init
-from . import show
+import argparse
+import sys
 
-commands = {
-    'add'  : add.cmd,
-    'done' : done.cmd,
-    'init' : init.cmd,
-    'show' : show.cmd,
+def cmd_execute(conf, args, repo):
+    filt = ' '.join(args.filter)
+    for t in repo.tasks_filter(filt):
+        t.completed = True
+        repo.task_write(t)
+    repo.commit_changes('done ' + filter)
+
+def init_parser(subparsers):
+    parser = subparsers.add_parser('done')
+    parser.set_defaults(execute = cmd_execute)
+
+    parser.add_argument('filter', nargs = argparse.REMAINDER,
+                        help = 'Tasks to show')
+
+    return parser
+
+cmd = {
+    'init_parser' : init_parser,
+    'open_repo'   : True,
 }
+
