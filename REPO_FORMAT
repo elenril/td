@@ -1,0 +1,24 @@
+All the text files, unless explicitly specified otherwise, shall be Unicode
+encoded as UTF-8, using Unix line endings (LF, '\n').
+
+/           ... Repository root, by default $HOME/.local/share/td/.
+  /.git/    ... The git dir for the td repository.
+  /version  ... A text file containing the repository version number
+                currently ASCII character '0'.
+  /pending  ... A text file listing tasks that are "pending", i.e. not completed
+                yet. The list contains full task UUIDs, one per line.
+  /tasks/   ... A directory containing all the tasks (whether completed or not).
+    xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
+            ... A file containing the task definition. The file name is a
+                random UUID (RFC4122 version 4) generated at task creation,
+                that uniquely identifies the task.
+                The file shall contain JSON data. The following fields are
+                recognized by the current version of td:
+
+                'text' (string) --- A description of the task.
+
+                None of the fields are mandatory.
+
+                Fields not described above should not be used and there is no
+                guarantee whether the td tool will preserve them over task
+                modifications.
