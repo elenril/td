@@ -16,6 +16,7 @@ encoded as UTF-8, using Unix line endings (LF, '\n').
                 recognized by the current version of td:
 
                 'text' (string) --- A description of the task.
+                'date_created' (number) -- Posix timestamp (UTC) on which the task was created
 
                 None of the fields are mandatory.
 

@@ -14,6 +14,7 @@
 # with td. If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
+import datetime
 
 from ..repo import task
 
@@ -24,6 +25,8 @@ def cmd_execute(conf, args, repo):
 
     if args.args:
         t.text = ' '.join(args.args)
+
+    t.date_created = datetime.datetime.now(datetime.timezone.utc)
 
     repo.task_write(t)
     repo.commit_changes('add %s' % t.text)

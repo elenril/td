@@ -26,6 +26,9 @@ class Task:
     # task description
     text = None
 
+    # task creation date, as an aware UTC datetime object
+    date_created = None
+
     def __init__(self):
         self.uuid      = str(uuid.uuid4())
         self.completed = False

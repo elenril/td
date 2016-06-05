@@ -15,6 +15,7 @@
 
 
 import collections
+import datetime
 import json
 import os
 import os.path
@@ -95,12 +96,16 @@ class Repository:
 
         self._repo.create_commit('HEAD', sig, sig, message, tree, [parent.hex])
 
-    def _task_pack(self, task):
+    def _task_pack(self, t):
         data = collections.OrderedDict()
         for fm in self._field_maps:
-            val = getattr(task, fm)
+            val = getattr(t, fm)
             if val is not None:
                 data[fm] = val
+
+        if t.date_created:
+            data['date_created'] = int(t.date_created.timestamp())
+
         return data
 
     def commit_changes(self, msg_title = 'Untitled commit'):
@@ -157,6 +162,10 @@ class Repository:
             for fm in self._field_maps:
                 if fm in data:
                     setattr(t, fm, data[fm])
+
+            if 'date_created' in data:
+                t.date_created = datetime.datetime.fromtimestamp(data['date_created'],
+                                                                 datetime.timezone.utc)
 
         t.uuid      = task_uuid
         t.completed = not task_uuid in self._pending

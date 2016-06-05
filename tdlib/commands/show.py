@@ -23,6 +23,10 @@ def cmd_execute(conf, args, repo):
         if t.text:
             sys.stdout.write('Text:\t%s\n' % t.text)
 
+        if t.date_created:
+            created_localts = t.date_created.astimezone()
+            sys.stdout.write('Created:\t%s\n' % created_localts.isoformat())
+
 
 def init_parser(subparsers):
     parser = subparsers.add_parser('show')
