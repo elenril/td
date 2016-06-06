@@ -60,6 +60,7 @@ class Repository:
 
     """Task fields to pack into JSON"""
     _field_maps = ('text',)
+    _date_fields = ('date_created', 'date_due', 'date_scheduled')
 
     def __init__(self, path):
         self._repo = pygit2.Repository(path)
@@ -103,8 +104,10 @@ class Repository:
             if val is not None:
                 data[fm] = val
 
-        if t.date_created:
-            data['date_created'] = int(t.date_created.timestamp())
+        for d in self._date_fields:
+            val = getattr(t, d)
+            if val is not None:
+                data[d] = int(val.timestamp())
 
         return data
 
@@ -163,9 +166,11 @@ class Repository:
                 if fm in data:
                     setattr(t, fm, data[fm])
 
-            if 'date_created' in data:
-                t.date_created = datetime.datetime.fromtimestamp(data['date_created'],
-                                                                 datetime.timezone.utc)
+            for d in self._date_fields:
+                if d in data:
+                    val = datetime.datetime.fromtimestamp(data[d],
+                                                          datetime.timezone.utc)
+                    setattr(t, d, val)
 
         t.uuid      = task_uuid
         t.completed = not task_uuid in self._pending

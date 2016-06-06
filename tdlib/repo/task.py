@@ -29,6 +29,12 @@ class Task:
     # task creation date, as an aware UTC datetime object
     date_created = None
 
+    # task due date (deadline), as an aware UTC datetime object
+    date_due     = None
+
+    # task scheduled date, as an aware UTC datetime object
+    date_scheduled = None
+
     def __init__(self):
         self.uuid      = str(uuid.uuid4())
         self.completed = False

@@ -20,12 +20,22 @@ def cmd_execute(conf, args, repo):
     for t in repo.tasks_filter(' '.join(args.filter)):
         sys.stdout.write('UUID:\t%s\n' % t.uuid)
 
+        sys.stdout.write('Status:\t%s\n' % ('completed' if t.completed else 'pending'))
+
         if t.text:
             sys.stdout.write('Text:\t%s\n' % t.text)
 
         if t.date_created:
             created_localts = t.date_created.astimezone()
             sys.stdout.write('Created:\t%s\n' % created_localts.isoformat())
+
+        if t.date_due:
+            due_localts = t.date_due.astimezone()
+            sys.stdout.write('Due:\t%s\n' % due_localts.isoformat())
+
+        if t.date_scheduled:
+            scheduled_localts = t.date_scheduled.astimezone()
+            sys.stdout.write('Scheduled:\t%s\n' % scheduled_localts.isoformat())
 
 
 def init_parser(subparsers):
