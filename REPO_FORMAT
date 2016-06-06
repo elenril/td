@@ -7,6 +7,18 @@ encoded as UTF-8, using Unix line endings (LF, '\n').
                 currently ASCII character '0'.
   /pending  ... A text file listing tasks that are "pending", i.e. not completed
                 yet. The list contains full task UUIDs, one per line.
+  /ids      ... A text file specifying short IDs for pending tasks, allowing to
+                identify them more conveniently. The file is a list of task
+                UUIDs, one per line. The task's line number determines its ID
+                (starting from 0).
+                The difference between this file and the 'pending' file is that
+                any action that changes IDs of existing tasks (such as marking a
+                task as done or deleting it) should not be reflected in this
+                file until the user requests to print a list of ids.
+                Thus this list may (temporarily) contain some tasks that are not
+                pending (or even do not exist). This allows the user to print a
+                list of tasks (with their short IDs) and then issue several
+                modification commands in a row.
   /tasks/   ... A directory containing all the tasks (whether completed or not).
     xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
             ... A file containing the task definition. The file name is a

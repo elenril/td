@@ -55,6 +55,9 @@ class Repository:
     """a Pending instance identifying pending tasks"""
     _pending = None
 
+    """a dict of { task uuid : short id }"""
+    _ids = None
+
     """List of entries for the current commit"""
     _commit_msgs = None
 
@@ -63,6 +66,8 @@ class Repository:
     _date_fields = ('date_created', 'date_due', 'date_scheduled')
 
     def __init__(self, path):
+        self._path = path
+
         self._repo = pygit2.Repository(path)
         for filepath, flags in self._repo.status().items():
             if flags & ~(pygit2.GIT_STATUS_CURRENT | pygit2.GIT_STATUS_IGNORED):
@@ -73,6 +78,8 @@ class Repository:
             if self._ver != SUPPORTED_VERSION:
                 raise UnsupportedVersionError(self._ver, SUPPORTED_VERSION)
 
+        self._load_short_ids()
+
         # create the directories if they do not exist
         # this could happen if they do not contain anything, since git does
         # not track empty dirs
@@ -82,11 +89,19 @@ class Repository:
                 os.mkdir(dirpath)
 
         self._pending     = pending.Pending(os.path.join(path, 'pending'))
-        self._path        = path
         self._commit_msgs = []
 
     def __del__(self):
         self.commit_changes()
+
+    def _load_short_ids(self):
+        with open(os.path.join(self._path, 'ids'), 'r') as ids_file:
+            self._ids = {}
+            i = 0
+            for line in ids_file:
+                uuid = line.strip()
+                self._ids[uuid] = i
+                i += 1
 
     def _commit_index(self, message):
         parent  = self._repo.head.peel()
@@ -141,6 +156,12 @@ class Repository:
             else:
                 self._pending.add(task.uuid)
 
+                with open(os.path.join(self._path, 'ids'), 'ta', newline = '\n') as ids_file:
+                    ids_file.write('%s\n' % task.uuid)
+                    ids_file.flush()
+                    os.fsync(ids_file.fileno())
+                    self._repo.index.add('ids')
+
             self._repo.index.add(os.path.relpath(self._pending.path, self._path))
 
         self._repo.index.write()
@@ -175,6 +196,9 @@ class Repository:
         t.uuid      = task_uuid
         t.completed = not task_uuid in self._pending
 
+        if task_uuid in self._ids:
+            t.id = self._ids[task_uuid]
+
         return t
 
     def _task_match(self, t, querystr):
@@ -190,6 +214,14 @@ class Repository:
             if self._task_match(t, querystr):
                 ret.append(t)
         return ret
+
+    def update_ids(self):
+        shutil.copy2(self._pending.path, os.path.join(self._path, 'ids'))
+        self._repo.index.add('ids')
+        self._repo.index.write()
+        self._commit_msgs.append('Update short IDs')
+
+        self._load_short_ids()
 
 def init(path):
     """
@@ -209,6 +241,10 @@ def init(path):
         with open(os.path.join(path, 'pending'), 'x') as pending_file:
             pass
         repo.index.add('pending')
+
+        with open(os.path.join(path, 'ids'), 'x') as ids_file:
+            pass
+        repo.index.add('ids')
 
         sig = pygit2.Signature('td', 'td@localhost')
         repo.index.write()

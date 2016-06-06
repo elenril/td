@@ -20,6 +20,9 @@ class Task:
     # task UUID as a string
     uuid = None
 
+    # task short ID (non-negative integer), None of not assigned
+    id = None
+
     # a bool indicating whether the task is completed
     completed = None
 
