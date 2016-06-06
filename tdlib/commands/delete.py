@@ -13,16 +13,27 @@
 # You should have received a copy of the GNU General Public License along
 # with td. If not, see <http://www.gnu.org/licenses/>.
 
-from . import add
-from . import delete
-from . import done
-from . import init
-from . import show
+import argparse
+import sys
 
-commands = {
-    'add'    : add.cmd,
-    'delete' : delete.cmd,
-    'done'   : done.cmd,
-    'init'   : init.cmd,
-    'show'   : show.cmd,
+def cmd_execute(conf, args, repo):
+    for t in repo.tasks_filter(' '.join(args.filter)):
+        repo.task_delete(t.uuid)
+
+    repo.commit_changes('delete %s' % (' '.join(args.filter)))
+
+
+def init_parser(subparsers):
+    parser = subparsers.add_parser('delete')
+    parser.set_defaults(execute = cmd_execute)
+
+    parser.add_argument('filter', nargs = argparse.REMAINDER,
+                        help = 'Tasks to delete')
+
+    return parser
+
+cmd = {
+    'init_parser' : init_parser,
+    'open_repo'   : True,
 }
+

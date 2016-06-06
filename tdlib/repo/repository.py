@@ -167,6 +167,21 @@ class Repository:
         self._repo.index.write()
         self._commit_msgs.append('Update task %s' % task.uuid)
 
+    def task_delete(self, task_uuid):
+        task_path = os.path.join(self._path, 'tasks', task_uuid)
+        if not os.path.isfile(task_path):
+            raise KeyError
+
+        os.remove(task_path)
+        self._repo.index.remove(os.path.join('tasks', task_uuid))
+
+        if task_uuid in self._pending:
+            del self._pending[task_uuid]
+            self._repo.index.add(os.path.relpath(self._pending.path, self._path))
+
+        self._repo.index.write()
+        self._commit_msgs.append('Delete task %s' % task_uuid)
+
     def _task_list(self):
         ret = []
         for f in os.listdir(os.path.join(self._path, 'tasks')):
