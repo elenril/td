@@ -20,7 +20,7 @@ def cmd_execute(conf, args, repo):
     repo.update_ids()
     repo.commit_changes('Update short ids')
 
-    for t in repo.tasks_filter(' '.join(args.filter)):
+    for t in repo.tasks_filter(args.filter):
         sys.stdout.write('UUID:\t%s\n' % t.uuid)
 
         if t.id is not None:
@@ -42,6 +42,8 @@ def cmd_execute(conf, args, repo):
         if t.date_scheduled:
             scheduled_localts = t.date_scheduled.astimezone()
             sys.stdout.write('Scheduled:\t%s\n' % scheduled_localts.isoformat())
+
+        sys.stdout.write('\n')
 
 
 def init_parser(subparsers):

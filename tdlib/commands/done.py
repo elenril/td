@@ -17,11 +17,10 @@ import argparse
 import sys
 
 def cmd_execute(conf, args, repo):
-    filt = ' '.join(args.filter)
-    for t in repo.tasks_filter(filt):
+    for t in repo.tasks_filter(args.filter):
         t.completed = True
         repo.task_write(t)
-    repo.commit_changes('done ' + filter)
+    repo.commit_changes('done ' + ' '.join(args.filter))
 
 def init_parser(subparsers):
     parser = subparsers.add_parser('done')

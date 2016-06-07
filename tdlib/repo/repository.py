@@ -23,6 +23,7 @@ import pygit2
 import shutil
 import uuid
 
+from . import filter as task_filter
 from . import pending
 from . import task
 
@@ -216,17 +217,13 @@ class Repository:
 
         return t
 
-    def _task_match(self, t, querystr):
-        if t.text and querystr in t.text:
-            return True
+    def tasks_filter(self, filter_args):
+        f = task_filter.TaskFilter(filter_args)
 
-        return False
-
-    def tasks_filter(self, querystr):
         ret = []
         for task_uuid in self._pending:
             t = self._task_load(task_uuid)
-            if self._task_match(t, querystr):
+            if f.task_match(t):
                 ret.append(t)
         return ret
 

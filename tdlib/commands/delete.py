@@ -17,7 +17,7 @@ import argparse
 import sys
 
 def cmd_execute(conf, args, repo):
-    for t in repo.tasks_filter(' '.join(args.filter)):
+    for t in repo.tasks_filter(args.filter):
         repo.task_delete(t.uuid)
 
     repo.commit_changes('delete %s' % (' '.join(args.filter)))
