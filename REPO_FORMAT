@@ -1,5 +1,7 @@
 All the text files, unless explicitly specified otherwise, shall be Unicode
-encoded as UTF-8, using Unix line endings (LF, '\n').
+encoded as UTF-8, using Unix line endings (LF, '\n'). All the dates/times shall
+be stored as strings in the ISO8601 format using the UTC timezone, that is
+YYYY-MM-DDTHH:mm:ss.ssssss+00:00
 
 /           ... Repository root, by default $HOME/.local/share/td/.
   /.git/    ... The git dir for the td repository.
@@ -27,8 +29,12 @@ encoded as UTF-8, using Unix line endings (LF, '\n').
                 The file shall contain JSON data. The following fields are
                 recognized by the current version of td:
 
-                'text' (string) --- A description of the task.
-                'date_created' (number) -- Posix timestamp (UTC) on which the task was created
+                'text'           (string) --- A description of the task.
+                'date_created'   (string) --- Time when the task was created.
+                'date_due'       (string) --- Time before which the task should be
+                                              finished (deadline).
+                'date_scheduled' (string) --- Time on which the user intends to
+                                              start working on the task.
 
                 None of the fields are mandatory.
 

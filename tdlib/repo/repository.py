@@ -16,6 +16,7 @@
 
 import collections
 import datetime
+import dateutil.parser
 import json
 import os
 import os.path
@@ -123,7 +124,7 @@ class Repository:
         for d in self._date_fields:
             val = getattr(t, d)
             if val is not None:
-                data[d] = int(val.timestamp())
+                data[d] = val.isoformat()
 
         return data
 
@@ -205,8 +206,7 @@ class Repository:
 
             for d in self._date_fields:
                 if d in data:
-                    val = datetime.datetime.fromtimestamp(data[d],
-                                                          datetime.timezone.utc)
+                    val = dateutil.parser.parse(data[d])
                     setattr(t, d, val)
 
         t.uuid      = task_uuid
