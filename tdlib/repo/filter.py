@@ -24,7 +24,8 @@ class _FilterElement:
         self.type = type
 
         if (type == TaskFilter._FILTER_UUID or
-            type == TaskFilter._FILTER_TEXT):
+            type == TaskFilter._FILTER_TEXT or
+            type == TaskFilter._FILTER_TAG):
             self.val = val
         elif type == TaskFilter._FILTER_ID:
             self.val = int(val)
@@ -38,6 +39,18 @@ class _FilterElement:
             return task.id == self.val
         if self.type == TaskFilter._FILTER_TEXT:
             return (task.text is not None) and self.val in task.text
+        if self.type == TaskFilter._FILTER_TAG:
+            if self.val in task.tags:
+                return True
+
+            taglen = len(self.val)
+            for tag in task.tags:
+                if (tag.startswith(self.val) and
+                    tag[taglen] == '.'):
+                    return True
+
+            return False
+
         raise NotImplementedError
 
 class TaskFilter:
@@ -49,6 +62,7 @@ class TaskFilter:
     _FILTER_CREATED   = 3
     _FILTER_DUE       = 4
     _FILTER_SCHEDULED = 5
+    _FILTER_TAG       = 6
 
     _elems = None
 
@@ -77,10 +91,16 @@ class TaskFilter:
                     type = self._FILTER_DUE
                 elif prefix == 'scheduled':
                     type = self._FILTER_SCHEDULED
+                elif prefix == 'tag':
+                    type = self._FILTER_TAG
 
             if type is None and word.isdigit():
                 type = self._FILTER_ID
                 val  = word
+
+            if type is None and word.startswith('+'):
+                type = self._FILTER_TAG
+                val = word[1:]
 
             if type is None:
                 text_match.append(word)

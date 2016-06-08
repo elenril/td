@@ -35,6 +35,11 @@ YYYY-MM-DDTHH:mm:ss.ssssss+00:00
                                               finished (deadline).
                 'date_scheduled' (string) --- Time on which the user intends to
                                               start working on the task.
+                'tags'  (array of string) --- A list of tags that apply to a
+                                              task. Tags are assumed to form a
+                                              dot-separated hierarchy, i.e. if a
+                                              task has a 'foo.bar' tag, then it
+                                              will match as having the 'foo' tag.
 
                 None of the fields are mandatory.
 

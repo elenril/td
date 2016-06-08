@@ -43,6 +43,12 @@ def cmd_execute(conf, args, repo):
             scheduled_localts = t.date_scheduled.astimezone()
             sys.stdout.write('Scheduled:\t%s\n' % scheduled_localts.isoformat())
 
+        if len(t.tags):
+            sys.stdout.write('Tags:\t')
+            for tag in t.tags:
+                sys.stdout.write('%s ' % tag)
+            sys.stdout.write('\n')
+
         sys.stdout.write('\n')
 
 

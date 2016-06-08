@@ -121,6 +121,9 @@ class Repository:
             if val is not None:
                 data[fm] = val
 
+        if len(t.tags):
+            data['tags'] = list(t.tags)
+
         for d in self._date_fields:
             val = getattr(t, d)
             if val is not None:
@@ -203,6 +206,10 @@ class Repository:
             for fm in self._field_maps:
                 if fm in data:
                     setattr(t, fm, data[fm])
+
+            if 'tags' in data:
+                for tag in data['tags']:
+                    t.tags.add(tag)
 
             for d in self._date_fields:
                 if d in data:

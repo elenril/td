@@ -14,7 +14,44 @@
 # with td. If not, see <http://www.gnu.org/licenses/>.
 
 
+import string
 import uuid
+import unicodedata
+
+class InvalidTagNameError(Exception):
+    tag      = None
+    charname = None
+
+    def __init__(self, tag, charname):
+        self.tag      = tag
+        self.charname = charname
+
+class _Tags:
+    _data = None
+
+    def __init__(self):
+        self._data = []
+
+    def add(self, tag):
+        for char in string.whitespace:
+            if char in tag:
+                charname = unicodedata.name(char, "Unknown character name")
+                raise InvalidTagNameError(tag, '\'%s\' (%s)' % (char, charname))
+
+        if not tag in self._data:
+            self._data.append(tag)
+
+    def __delitem__(self, task):
+        del self._data[task]
+
+    def __contains__(self, task):
+        return task in self._data
+
+    def __len__(self):
+        return len(self._data)
+
+    def __iter__(self):
+        return iter(self._data)
 
 class Task:
     # task UUID as a string
@@ -29,6 +66,9 @@ class Task:
     # task description
     text = None
 
+    # a set of tags
+    tags = None
+
     # task creation date, as an aware UTC datetime object
     date_created = None
 
@@ -41,3 +81,4 @@ class Task:
     def __init__(self):
         self.uuid      = str(uuid.uuid4())
         self.completed = False
+        self.tags      = _Tags()
