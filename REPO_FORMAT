@@ -29,17 +29,21 @@ YYYY-MM-DDTHH:mm:ss.ssssss+00:00
                 The file shall contain JSON data. The following fields are
                 recognized by the current version of td:
 
-                'text'           (string) --- A description of the task.
-                'date_created'   (string) --- Time when the task was created.
-                'date_due'       (string) --- Time before which the task should be
-                                              finished (deadline).
-                'date_scheduled' (string) --- Time on which the user intends to
-                                              start working on the task.
-                'tags'  (array of string) --- A list of tags that apply to a
-                                              task. Tags are assumed to form a
-                                              dot-separated hierarchy, i.e. if a
-                                              task has a 'foo.bar' tag, then it
-                                              will match as having the 'foo' tag.
+                'text'           (string)   --- A description of the task.
+                'date_created'   (string)   --- Time when the task was created.
+                'date_due'       (string)   --- Time before which the task should be
+                                                finished (deadline).
+                'date_scheduled' (string)   --- Time on which the user intends to
+                                                start working on the task.
+                'tags'  (array of string)   --- A list of tags that apply to a
+                                                task. Tags are assumed to form a
+                                                dot-separated hierarchy, i.e. if a
+                                                task has a 'foo.bar' tag, then it
+                                                will match as having the 'foo' tag.
+                'depends' (array of string) --- A list of UUIDs identifying
+                                                tasks that need to be completed
+                                                before this task can be worked
+                                                on.
 
                 None of the fields are mandatory.
 

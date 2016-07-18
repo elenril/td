@@ -49,6 +49,12 @@ def cmd_execute(conf, args, repo):
                 sys.stdout.write('%s ' % tag)
             sys.stdout.write('\n')
 
+        if len(t.dependencies):
+            sys.stdout.write('Dependencies:\t')
+            for dep in t.dependencies:
+                sys.stdout.write('%s ' % dep)
+            sys.stdout.write('\n')
+
         sys.stdout.write('\n')
 
 

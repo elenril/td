@@ -26,20 +26,14 @@ class InvalidTagNameError(Exception):
         self.tag      = tag
         self.charname = charname
 
-class _Tags:
+class _OrderedSet:
     _data = None
 
     def __init__(self):
         self._data = []
 
     def add(self, tag):
-        for char in string.whitespace:
-            if char in tag:
-                charname = unicodedata.name(char, "Unknown character name")
-                raise InvalidTagNameError(tag, '\'%s\' (%s)' % (char, charname))
-
-        if not tag in self._data:
-            self._data.append(tag)
+        raise NotImplementedError
 
     def __delitem__(self, task):
         del self._data[task]
@@ -52,6 +46,30 @@ class _Tags:
 
     def __iter__(self):
         return iter(self._data)
+
+class _Tags(_OrderedSet):
+    def add(self, tag):
+        for char in string.whitespace:
+            if char in tag:
+                charname = unicodedata.name(char, "Unknown character name")
+                raise InvalidTagNameError(tag, '\'%s\' (%s)' % (char, charname))
+
+        if not tag in self._data:
+            self._data.append(tag)
+
+class InvalidDependecyIDError(Exception):
+    id      = None
+
+    def __init__(self, id):
+        self.id = id
+
+class _Dependencies(_OrderedSet):
+    def add(self, dep):
+        try:
+            uuid.UUID(dep)
+            self._data.append(dep)
+        except ValueError:
+            raise InvalidDependecyIDError(dep)
 
 class Task:
     # task UUID as a string
@@ -69,6 +87,9 @@ class Task:
     # a set of tags
     tags = None
 
+    # a set of dependencies of this task
+    dependencies = None
+
     # task creation date, as an aware UTC datetime object
     date_created = None
 
@@ -79,6 +100,7 @@ class Task:
     date_scheduled = None
 
     def __init__(self):
-        self.uuid      = str(uuid.uuid4())
-        self.completed = False
-        self.tags      = _Tags()
+        self.uuid         = str(uuid.uuid4())
+        self.completed    = False
+        self.tags         = _Tags()
+        self.dependencies = _Dependencies()

@@ -124,6 +124,9 @@ class Repository:
         if len(t.tags):
             data['tags'] = list(t.tags)
 
+        if len(t.dependencies):
+            data['depends'] = list(t.dependencies)
+
         for d in self._date_fields:
             val = getattr(t, d)
             if val is not None:
@@ -210,6 +213,10 @@ class Repository:
             if 'tags' in data:
                 for tag in data['tags']:
                     t.tags.add(tag)
+
+            if 'depends' in data:
+                for dep in data['depends']:
+                    t.dependencies.add(dep)
 
             for d in self._date_fields:
                 if d in data:
