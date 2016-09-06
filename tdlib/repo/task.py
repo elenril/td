@@ -99,6 +99,8 @@ class Task:
     # task scheduled date, as an aware UTC datetime object
     date_scheduled = None
 
+    tw_extra = None
+
     def __init__(self):
         self.uuid         = str(uuid.uuid4())
         self.completed    = False

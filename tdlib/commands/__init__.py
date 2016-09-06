@@ -16,13 +16,15 @@
 from . import add
 from . import delete
 from . import done
+from . import import_tw
 from . import init
 from . import show
 
 commands = {
-    'add'    : add.cmd,
-    'delete' : delete.cmd,
-    'done'   : done.cmd,
-    'init'   : init.cmd,
-    'show'   : show.cmd,
+    'add'       : add.cmd,
+    'delete'    : delete.cmd,
+    'done'      : done.cmd,
+    'import_tw' : import_tw.cmd,
+    'init'      : init.cmd,
+    'show'      : show.cmd,
 }
