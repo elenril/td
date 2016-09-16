@@ -57,6 +57,9 @@ class _Tags(_OrderedSet):
         if not tag in self._data:
             self._data.append(tag)
 
+    def __str__(self):
+        return ' '.join(self._data)
+
 class InvalidDependecyIDError(Exception):
     id      = None
 
