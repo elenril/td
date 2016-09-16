@@ -16,44 +16,9 @@
 import dateutil.parser
 import uuid
 
-class _FilterElement:
-    type = None
-    val  = None
-
-    def __init__(self, type, val):
-        self.type = type
-
-        if (type == TaskFilter._FILTER_UUID or
-            type == TaskFilter._FILTER_TEXT or
-            type == TaskFilter._FILTER_TAG):
-            self.val = val
-        elif type == TaskFilter._FILTER_ID:
-            self.val = int(val)
-        else:
-            self.val = dateutil.parser.parse(val)
-
-    def task_match(self, task):
-        if self.type == TaskFilter._FILTER_UUID:
-            return task.uuid == self.val
-        if self.type == TaskFilter._FILTER_ID:
-            return task.id == self.val
-        if self.type == TaskFilter._FILTER_TEXT:
-            return (task.text is not None) and self.val in task.text
-        if self.type == TaskFilter._FILTER_TAG:
-            if self.val in task.tags:
-                return True
-
-            taglen = len(self.val)
-            for tag in task.tags:
-                if (tag.startswith(self.val) and
-                    tag[taglen] == '.'):
-                    return True
-
-            return False
-
-        raise NotImplementedError
-
-class TaskFilter:
+class _FilterTerm:
+    _type = None
+    _val  = None
 
     # filter types
     _FILTER_UUID      = 0
@@ -64,55 +29,190 @@ class TaskFilter:
     _FILTER_SCHEDULED = 5
     _FILTER_TAG       = 6
 
-    _elems = None
+    def __init__(self, term):
+        type = None
+        val  = None
 
-    def __init__(self, filter_expr):
-        self._elems = []
+        if ':' in term:
+            prefix, val = term.split(':', maxsplit = 1)
 
-        text_match = []
-
-        for word in filter_expr:
-            type = None
-            val  = None
-
-            if ':' in word:
-                prefix, val = word.split(':', maxsplit = 1)
-
-                prefix = prefix.lower()
-                if prefix == 'uuid':
-                    type = self._FILTER_UUID
-                elif prefix == 'id':
-                    type = self._FILTER_ID
-                elif prefix == 'text':
-                    type = self._FILTER_TEXT
-                elif prefix == 'created':
-                    type = self._FILTER_CREATED
-                elif prefix == 'due':
-                    type = self._FILTER_DUE
-                elif prefix == 'scheduled':
-                    type = self._FILTER_SCHEDULED
-                elif prefix == 'tag':
-                    type = self._FILTER_TAG
-
-            if type is None and word.isdigit():
+            prefix = prefix.lower()
+            if prefix == 'uuid':
+                type = self._FILTER_UUID
+            elif prefix == 'id':
                 type = self._FILTER_ID
-                val  = word
-
-            if type is None and word.startswith('+'):
+            elif prefix == 'text':
+                type = self._FILTER_TEXT
+            elif prefix == 'created':
+                type = self._FILTER_CREATED
+            elif prefix == 'due':
+                type = self._FILTER_DUE
+            elif prefix == 'scheduled':
+                type = self._FILTER_SCHEDULED
+            elif prefix == 'tag':
                 type = self._FILTER_TAG
-                val = word[1:]
 
-            if type is None:
-                text_match.append(word)
-            else:
-                self._elems.append(_FilterElement(type, val))
+        if type is None and term.isdigit():
+            type = self._FILTER_ID
+            val  = term
 
-        if text_match:
-            self._elems.append(_FilterElement(self._FILTER_TEXT,
-                                              ' '.join(text_match)))
+        if type is None and term.startswith('+'):
+            type = self._FILTER_TAG
+            val = term[1:]
+
+        if type is None:
+            type = self._FILTER_TEXT
+            val  = term
+
+        self._type = type
+
+        if (type == self._FILTER_UUID or
+            type == self._FILTER_TEXT or
+            type == self._FILTER_TAG):
+            self._val = val
+        elif type == self._FILTER_ID:
+            self._val = int(val)
+        else:
+            self._val = dateutil.parser.parse(val)
 
     def task_match(self, task):
-        for elem in self._elems:
-            if not elem.task_match(task):
-                return False
+        if self._type == self._FILTER_UUID:
+            return task.uuid == self._val
+        if self._type == self._FILTER_ID:
+            return task.id == self._val
+        if self._type == self._FILTER_TEXT:
+            return (task.text is not None) and self._val in task.text
+        if self._type == self._FILTER_TAG:
+            if self._val in task.tags:
+                return True
+
+            taglen = len(self._val)
+            for tag in task.tags:
+                if (tag.startswith(self._val) and
+                    tag[taglen] == '.'):
+                    return True
+
+            return False
+
+        raise NotImplementedError
+
+class FilterSyntaxError(Exception):
+    pass
+
+# the following is based on http://www.engr.mun.ca/~theo/Misc/exp_parsing.htm#shunting_yard
+
+class _Tree:
+    _operator = None
+    _op0      = None
+    _op1      = None
+
+    def __init__(self, operator, op0, op1 = None):
+        self._operator = operator
+        self._op0      = op0
+        self._op1      = op1
+
+    def __repr__(self):
+        if self._op1 != None:
+            return '%s(%s, %s)' % (self._operator, self._op0, self._op1)
+        return '%s(%s)' % (self._operator, self._op0)
+
+    def task_match(self, task):
+        if self._operator == 'and':
+            return self._op0.task_match(task) and self._op1.task_match(task)
+        elif self._operator == 'or':
+            return self._op0.task_match(task) or self._op1.task_match(task)
+        elif self._operator == 'not':
+            return not self._op0.task_match(task)
+
+_unary_operators = ('not',)
+_binary_operators = ('or', 'and')
+
+def _gt(arg0, arg1):
+    if arg0 in _binary_operators and arg1 in _binary_operators:
+        idx0 = _binary_operators.index(arg0)
+        idx1 = _binary_operators.index(arg1)
+        return idx0 >= idx1
+    elif arg0 in _unary_operators and arg1 in _binary_operators:
+        return True
+    elif arg1 in _unary_operators:
+        return False
+    raise ValueError
+
+def _next(query):
+    idx = query[1]
+    if idx >= len(query[0]):
+        return None
+    return query[0][idx]
+
+def _consume(query):
+    query[1] += 1
+
+def _pop_operator(operator_stack, tree_stack):
+    op = operator_stack.pop()
+    if op in _binary_operators:
+        arg1 = tree_stack.pop()
+        arg0 = tree_stack.pop()
+        tree_stack.append(_Tree(op, arg0, arg1))
+    else:
+        arg0 = tree_stack.pop()
+        tree_stack.append(_Tree(op, arg0))
+
+def _push_operator(op, operator_stack, tree_stack):
+    while len(operator_stack) and _gt(operator_stack[-1], op):
+        _pop_operator(operator_stack, tree_stack)
+    operator_stack.append(op)
+
+def _p(query, operator_stack, tree_stack):
+    n = _next(query)
+    if n == '(':
+        _consume(query)
+
+        op_stack1, tree_stack1 = [], []
+        _e(query, op_stack1, tree_stack1)
+        n = _next(query)
+        if n != ')':
+            raise FilterSyntaxError('Missing ")"')
+        _consume(query)
+
+        tree_stack.append(tree_stack1.pop())
+    elif n in _unary_operators:
+        _push_operator(n, operator_stack, tree_stack)
+        _consume(query)
+        _p(query, operator_stack, tree_stack)
+    else:
+        tree_stack.append(_FilterTerm(n))
+        _consume(query)
+
+def _e(query, operator_stack, tree_stack):
+    _p(query, operator_stack, tree_stack)
+    while _next(query) in _binary_operators:
+        _push_operator(_next(query), operator_stack, tree_stack)
+        _consume(query)
+        _p(query, operator_stack, tree_stack)
+    while len(operator_stack):
+        _pop_operator(operator_stack, tree_stack)
+
+def _parse_filter_expr(query):
+    operator_stack = []
+    tree_stack     = []
+
+    query = [query, 0]
+
+    _e(query, operator_stack, tree_stack)
+    if _next(query) != None:
+        raise FilterSyntaxError()
+
+    return tree_stack[-1]
+
+class TaskFilter:
+
+    _parse_tree = None
+
+    def __init__(self, filter_expr):
+        if len(filter_expr):
+            self._parse_tree = _parse_filter_expr(filter_expr)
+
+    def task_match(self, task):
+        if self._parse_tree != None:
+            return self._parse_tree.task_match(task)
         return True
