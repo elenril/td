@@ -30,6 +30,7 @@ def cmd_execute(conf, args, repo):
             continue
 
         extra = {}
+        annotations = []
 
         for key, val in tw_task.items():
             if (key == 'id' or key == 'urgency'):
@@ -56,11 +57,22 @@ def cmd_execute(conf, args, repo):
             elif key == 'tags':
                 for tag in val:
                     td_task.tags.add(tag)
+            elif key == 'project':
+                td_task.tags.add('projects.%s' % val)
             elif key == 'depends':
                 for dep in val.split(','):
                     td_task.dependencies.add(dep)
+            elif key == 'annotations':
+                for it in val:
+                    annotations.append('%s -- %s' % (it['entry'], it['description']))
             else:
                 extra[key] = val
+        if annotations:
+            if td_task.text is None:
+                td_task.text = ''
+
+            td_task.text = '\n\n'.join([td_task.text] + annotations)
+
         if extra:
             td_task.tw_extra = extra
         repo.task_write(td_task)
