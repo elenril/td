@@ -31,6 +31,7 @@ YYYY-MM-DDTHH:mm:ss.ssssss+00:00
 
                 'text'           (string)   --- A description of the task.
                 'date_created'   (string)   --- Time when the task was created.
+                'date_completed' (string)   --- Time when the task was completed.
                 'date_due'       (string)   --- Time before which the task should be
                                                 finished (deadline).
                 'date_scheduled' (string)   --- Time on which the user intends to

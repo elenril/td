@@ -47,6 +47,8 @@ def cmd_execute(conf, args, repo):
                 td_task.uuid = val
             elif key == 'entry':
                 td_task.date_created = dateutil.parser.parse(val)
+            elif key == 'end':
+                td_task.date_completed = dateutil.parser.parse(val)
             elif key == 'due':
                 td_task.date_due = dateutil.parser.parse(val)
             elif key == 'scheduled':

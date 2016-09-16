@@ -96,6 +96,10 @@ class Task:
     # task creation date, as an aware UTC datetime object
     date_created = None
 
+    # task completion date, as an aware UTC datetime object
+    # None if completed is False
+    date_completed = None
+
     # task due date (deadline), as an aware UTC datetime object
     date_due     = None
 

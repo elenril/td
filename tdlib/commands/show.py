@@ -35,6 +35,10 @@ def cmd_execute(conf, args, repo):
             created_localts = t.date_created.astimezone()
             sys.stdout.write('Created:\t%s\n' % created_localts.isoformat())
 
+        if t.date_completed:
+            completed_localts = t.date_completed.astimezone()
+            sys.stdout.write('Completed:\t%s\n' % completed_localts.isoformat())
+
         if t.date_due:
             due_localts = t.date_due.astimezone()
             sys.stdout.write('Due:\t%s\n' % due_localts.isoformat())

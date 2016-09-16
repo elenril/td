@@ -65,7 +65,7 @@ class Repository:
 
     """Task fields to pack into JSON"""
     _field_maps = ('text',)
-    _date_fields = ('date_created', 'date_due', 'date_scheduled')
+    _date_fields = ('date_created', 'date_completed', 'date_due', 'date_scheduled')
 
     def __init__(self, path):
         self._path = path
