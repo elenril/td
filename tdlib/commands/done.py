@@ -14,11 +14,13 @@
 # with td. If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
+import datetime
 import sys
 
 def cmd_execute(conf, args, repo):
     for t in repo.tasks_filter(args.filter):
         t.completed = True
+        t.date_completed = datetime.datetime.now(datetime.timezone.utc)
         repo.task_write(t)
     repo.commit_changes('done ' + ' '.join(args.filter))
 
