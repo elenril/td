@@ -67,10 +67,16 @@ class Repository:
     _field_maps = ('text',)
     _date_fields = ('date_created', 'date_completed', 'date_due', 'date_scheduled')
 
+    _initialized = False
+
     def __init__(self, path):
         self._path = path
 
-        self._repo = pygit2.Repository(path)
+        try:
+            self._repo = pygit2.Repository(path)
+        except KeyError:
+            raise ValueError('Could not open path "%s" as a git repository' % path)
+
         for filepath, flags in self._repo.status().items():
             if flags & ~(pygit2.GIT_STATUS_CURRENT | pygit2.GIT_STATUS_IGNORED):
                 raise DirtyRepositoryError()
@@ -93,8 +99,11 @@ class Repository:
         self._pending     = pending.Pending(os.path.join(path, 'pending'))
         self._commit_msgs = []
 
+        self._initialized = True
+
     def __del__(self):
-        self.commit_changes()
+        if self._initialized:
+            self.commit_changes()
 
     def _load_short_ids(self):
         with open(os.path.join(self._path, 'ids'), 'r') as ids_file:
