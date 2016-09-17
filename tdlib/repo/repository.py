@@ -116,7 +116,7 @@ class Repository:
 
     def _commit_index(self, message):
         parent  = self._repo.head.peel()
-        sig = pygit2.Signature('td', 'td@localhost')
+        sig = self._repo.default_signature
 
         self._repo.index.write()
         tree    = self._repo.index.write_tree()
@@ -287,7 +287,7 @@ def init(path):
             pass
         repo.index.add('ids')
 
-        sig = pygit2.Signature('td', 'td@localhost')
+        sig = repo.default_signature
         repo.index.write()
         tree = repo.index.write_tree()
         repo.create_commit('refs/heads/master', sig, sig, 'Initial commit.', tree, [])
