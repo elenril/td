@@ -32,14 +32,14 @@ class _OrderedSet:
     def __init__(self):
         self._data = []
 
-    def add(self, tag):
+    def add(self, item):
         raise NotImplementedError
 
-    def __delitem__(self, task):
-        del self._data[task]
+    def __delitem__(self, item):
+        del self._data[self._data.index(item)]
 
-    def __contains__(self, task):
-        return task in self._data
+    def __contains__(self, item):
+        return item in self._data
 
     def __len__(self):
         return len(self._data)
