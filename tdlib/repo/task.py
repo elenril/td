@@ -108,8 +108,85 @@ class Task:
 
     tw_extra = None
 
+    ### private ###
+    _MOD_TEXT      = 0
+    _MOD_TAG_ADD   = 1
+    _MOD_TAG_DEL   = 2
+    _MOD_TAG_SET   = 3
+    #_MOD_DEP_ADD   = 4 TODO
+    #_MOD_DEP_DEL   = 5
+    _MOD_CREATED   = 6
+    _MOD_COMPLETED = 7
+    _MOD_DUE       = 8
+    _MOD_SCHEDULED = 9
+
     def __init__(self):
         self.uuid         = str(uuid.uuid4())
+
         self.completed    = False
+        self.blocked      = False
+        self.blocking     = False
+
         self.tags         = _Tags()
         self.dependencies = _Dependencies()
+
+    def modify(self, mod_desc):
+        for it, val in mod_desc:
+            if it == self._MOD_TEXT:
+                self.text = val
+            elif it == self._MOD_TAG_ADD:
+                self.tags.add(val)
+            elif it == self._MOD_TAG_DEL:
+                if val in self.tags:
+                    del self.tags[val]
+            elif it == self._MOD_TAG_SET:
+                self.tags = _Tags()
+                for tag in val:
+                    self.tags.add(tag)
+            elif it == self._MOD_CREATED:
+                self.date_created = val
+            elif it == self._MOD_COMPLETED:
+                self.date_completed = val
+            elif it == self._MOD_DUE:
+                self.date_due = val
+            elif it == self._MOD_SCHEDULED:
+                self.date_scheduled = val
+            else:
+                raise ValueError('Invalid modification code: %d' % it)
+
+    @property
+    def urgency(self):
+        return 0.0
+
+    @staticmethod
+    def parse_modifications(mod_desc):
+        ret = []
+
+        for it in mod_desc:
+            if it.startswith('+'):
+                ret.append((Task._MOD_TAG_ADD, it[1:]))
+            elif it.startswith('-'):
+                ret.append((Task._MOD_TAG_DEL, it[1:]))
+            elif not ':' in it:
+                ret.append((Task._MOD_TEXT, it))
+            else:
+                it, val = it.split(':', maxsplit = 1)
+                if it == 'text':
+                    ret.append((Task._MOD_TEXT, val))
+                elif it == 'tag+':
+                    ret.append((Task._MOD_TAG_ADD, val))
+                elif it == 'tag-':
+                    ret.append((Task._MOD_TAG_DEL, val))
+                elif it == 'tag':
+                    ret.append((Task._MOD_TAG_SET, val.split(',')))
+                elif it == 'created':
+                    ts = dateutil.parser.parse(val)
+                    ret.append((Task._MOD_CREATED, ts))
+                elif it == 'due':
+                    ts = dateutil.parser.parse(val)
+                    ret.append((Task._MOD_DUE, ts))
+                elif it == 'scheduled':
+                    ts = dateutil.parser.parse(val)
+                    ret.append((Task._MOD_SCHEDULED, ts))
+
+        return ret

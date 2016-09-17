@@ -18,6 +18,7 @@ from . import delete
 from . import done
 from . import import_tw
 from . import init
+from . import modify
 from . import show
 from . import tags
 
@@ -27,6 +28,7 @@ commands = {
     'done'      : done.cmd,
     'import_tw' : import_tw.cmd,
     'init'      : init.cmd,
+    'modify'    : modify.cmd,
     'show'      : show.cmd,
     'tags'      : tags.cmd
 }
