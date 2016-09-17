@@ -28,11 +28,26 @@ import tdlib.repo.repository
 
 CONFIG_OVERRIDE = 'TD_CONFIG'
 
+def _read_config(config_path):
+    conf = tdlib.config.Config()
+
+    if config_path != None and os.path.isfile(config_path):
+        with open(config_path, 'r') as cf:
+            for line in cf:
+                line = line.strip()
+                if line.startswith('#'):
+                    continue
+
+                entry, val = line.split('=', maxsplit = 1)
+                conf[entry] = val
+
+    return conf
+
 def main(argv):
     parser = argparse.ArgumentParser(prog = argv[0])
 
     config_path = None
-    config_dir = xdg.BaseDirectory.load_first_config(tdlib.common_defs.PROGNAME)
+    config_dir = os.path.join(xdg.BaseDirectory.xdg_config_home, tdlib.common_defs.PROGNAME)
     if config_dir:
         config_path = os.path.join(config_dir, 'config')
     if CONFIG_OVERRIDE in os.environ:
@@ -49,11 +64,11 @@ def main(argv):
 
     args = parser.parse_args(argv[1:])
 
-    conf = tdlib.config.Config(args.config)
+    conf = _read_config(args.config)
 
     repo = None
     if args.parser and tdlib.commands.commands[args.parser]['open_repo']:
-        repo = tdlib.repo.repository.Repository(conf.repo_path)
+        repo = tdlib.repo.repository.Repository(conf['repo_path'])
 
     args.execute(conf, args, repo)
 

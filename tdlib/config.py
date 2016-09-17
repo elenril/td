@@ -18,13 +18,57 @@ import xdg.BaseDirectory
 
 from . import common_defs
 
-class Config:
+_config_defaults = {
+    'repo_path' : os.path.join(xdg.BaseDirectory.xdg_data_home, common_defs.PROGNAME),
+}
 
-    """Path to the repository root"""
-    repo_path = None
+class InvalidConfigItem(Exception):
+    pass
 
-    def __init__(self, configfile):
-        self.repo_path = os.path.join(xdg.BaseDirectory.xdg_data_home, common_defs.PROGNAME)
+class _ConfigSection:
+    _data = None
 
-        if configfile:
-            raise NotImplementedError
+    def __init__(self, defaults):
+        self._data = {}
+
+        for key, val in defaults.items():
+            if isinstance(val, dict):
+                self._data[key] = _ConfigSection(val)
+            else:
+                self._data[key] = val
+
+    def __getitem__(self, key):
+        remainder = None
+        if '.' in key:
+            key, remainder = key.split('.', maxsplit = 1)
+
+        if not key in self._data:
+            raise InvalidConfigItem('No such config item: %s' % key)
+
+        val = self._data[key]
+        if remainder != None:
+            if not isinstance(val, _ConfigSection):
+                raise InvalidConfigItem('Attempted to get "%s", but "%s" is not a section' % ('.'.join(key, remainder), key))
+            return val[remainder]
+        return val
+
+    def __setitem__(self, key, val):
+        remainder = None
+        if '.' in key:
+            key, remainder = key.split('.', maxsplit = 1)
+
+        if not key in self._data:
+            raise InvalidConfigItem('No such config item: %s' % key)
+
+        if remainder != None:
+            if not isinstance(val, _ConfigSection):
+                raise InvalidConfigItem('Attempted to set "%s", but "%s" is not a section' % ('.'.join(key, remainder), key))
+            self._data[key][remainder] = val
+        else:
+            if isinstance(self._data[key], _ConfigSection):
+                raise InvalidConfigItem('Key "%s" refers to a config section, not a single item' % key)
+            self._data[key] = val
+
+class Config(_ConfigSection):
+    def __init__(self):
+        super().__init__(_config_defaults)
