@@ -16,8 +16,12 @@
 import argparse
 import sys
 
+from ..repo.repository import Repository
+
 def cmd_execute(conf, args, repo):
     repo.update_ids()
+
+    repo = Repository(repo.path)
 
     for t in repo.tasks_filter(args.filter):
         sys.stdout.write('UUID:\t%s\n' % t.uuid)

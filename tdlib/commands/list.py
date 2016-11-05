@@ -16,10 +16,13 @@
 import argparse
 import sys
 
+from ..repo.repository import Repository
 from ..utils import report_print
 
 def cmd_execute(conf, args, repo):
     repo.update_ids()
+
+    repo = Repository(repo.path)
 
     columns = [('id', 'ID'), ('tags', 'Tags'), ('urgency', 'Urgency'), ('text', 'Description')]
 

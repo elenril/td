@@ -45,11 +45,12 @@ class DirtyRepositoryError(Exception):
     pass
 
 class Repository:
+    ### public ###
+
+    """path to the repository root"""
+    path = None
 
     ### private ###
-    """path to the repository root"""
-    _path = None
-
     """the underlying git repo"""
     _repo = None
 
@@ -72,7 +73,7 @@ class Repository:
     _initialized = False
 
     def __init__(self, path):
-        self._path = path
+        self.path = path
 
         try:
             self._repo = pygit2.Repository(path)
@@ -105,7 +106,7 @@ class Repository:
 
 
     def _load_short_ids(self):
-        with open(os.path.join(self._path, 'ids'), 'r') as ids_file:
+        with open(os.path.join(self.path, 'ids'), 'r') as ids_file:
             self._ids = {}
             i = 0
             for line in ids_file:
@@ -157,7 +158,7 @@ class Repository:
             self._commit_msgs = []
 
     def _task_write(self, task):
-        path = os.path.join(self._path, 'tasks', task.uuid)
+        path = os.path.join(self.path, 'tasks', task.uuid)
         path_tmp = path + '.tmp'
 
         with open(path_tmp, 'wt', newline = '\n') as tmpfile:
@@ -167,7 +168,7 @@ class Repository:
             os.fsync(tmpfile.fileno())
         os.replace(path_tmp, path)
 
-        self._repo.index.add(os.path.relpath(path, self._path))
+        self._repo.index.add(os.path.relpath(path, self.path))
 
         if task.completed == (task.uuid in self._pending):
             if task.uuid in self._pending:
@@ -175,13 +176,13 @@ class Repository:
             else:
                 self._pending.add(task.uuid)
 
-                with open(os.path.join(self._path, 'ids'), 'ta', newline = '\n') as ids_file:
+                with open(os.path.join(self.path, 'ids'), 'ta', newline = '\n') as ids_file:
                     ids_file.write('%s\n' % task.uuid)
                     ids_file.flush()
                     os.fsync(ids_file.fileno())
                     self._repo.index.add('ids')
 
-            self._repo.index.add(os.path.relpath(self._pending.path, self._path))
+            self._repo.index.add(os.path.relpath(self._pending.path, self.path))
 
         self._repo.index.write()
         self._commit_msgs.append('Update task %s' % task.uuid)
@@ -196,7 +197,7 @@ class Repository:
 
         if task_uuid in self._pending:
             del self._pending[task_uuid]
-            self._repo.index.add(os.path.relpath(self._pending.path, self._path))
+            self._repo.index.add(os.path.relpath(self._pending.path, self.path))
             self._reload_pending_tasks()
 
         self._repo.index.write()
@@ -215,7 +216,7 @@ class Repository:
 
     def _task_list(self):
         ret = []
-        for f in os.listdir(os.path.join(self._path, 'tasks')):
+        for f in os.listdir(os.path.join(self.path, 'tasks')):
             try:
                 u = uuid.UUID(f)
                 ret.append(f)
@@ -226,7 +227,7 @@ class Repository:
     def _task_load(self, task_uuid):
         t = task.Task()
 
-        with open(os.path.join(self._path, 'tasks', task_uuid), 'rt') as task_fp:
+        with open(os.path.join(self.path, 'tasks', task_uuid), 'rt') as task_fp:
             data = json.load(task_fp)
 
             for fm in self._field_maps:
@@ -268,7 +269,7 @@ class Repository:
         return ret
 
     def update_ids(self):
-        shutil.copy2(self._pending.path, os.path.join(self._path, 'ids'))
+        shutil.copy2(self._pending.path, os.path.join(self.path, 'ids'))
         self._repo.index.add('ids')
         self._repo.index.write()
         self._commit_changes('Update short IDs')
