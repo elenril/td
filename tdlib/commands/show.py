@@ -18,7 +18,6 @@ import sys
 
 def cmd_execute(conf, args, repo):
     repo.update_ids()
-    repo.commit_changes('Update short ids')
 
     for t in repo.tasks_filter(args.filter):
         sys.stdout.write('UUID:\t%s\n' % t.uuid)

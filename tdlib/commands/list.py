@@ -20,7 +20,6 @@ from ..utils import report_print
 
 def cmd_execute(conf, args, repo):
     repo.update_ids()
-    repo.commit_changes('Update short ids')
 
     columns = [('id', 'ID'), ('tags', 'Tags'), ('urgency', 'Urgency'), ('text', 'Description')]
 

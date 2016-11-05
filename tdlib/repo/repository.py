@@ -103,9 +103,6 @@ class Repository:
 
         self._initialized = True
 
-    def __del__(self):
-        if self._initialized:
-            self.commit_changes()
 
     def _load_short_ids(self):
         with open(os.path.join(self._path, 'ids'), 'r') as ids_file:
@@ -148,7 +145,7 @@ class Repository:
 
         return data
 
-    def commit_changes(self, msg_title = 'Untitled commit'):
+    def _commit_changes(self, msg_title = 'Untitled commit'):
         commit = False
         for filepath, flags in self._repo.status().items():
             if flags & pygit2.GIT_STATUS_INDEX_MODIFIED:
@@ -214,7 +211,7 @@ class Repository:
             else:
                 raise TypeError('Unknown repository modification type: %s' % mod)
 
-        self.commit_changes(commit_title)
+        self._commit_changes(commit_title)
 
     def _task_list(self):
         ret = []
@@ -274,7 +271,7 @@ class Repository:
         shutil.copy2(self._pending.path, os.path.join(self._path, 'ids'))
         self._repo.index.add('ids')
         self._repo.index.write()
-        self._commit_msgs.append('Update short IDs')
+        self._commit_changes('Update short IDs')
 
         self._load_short_ids()
 
