@@ -17,6 +17,7 @@ import argparse
 import sys
 
 from ..repo import task
+from ..repo.repository_mod import TaskWrite
 
 def cmd_execute(conf, args, repo):
     if not '--' in args.filter:
@@ -27,11 +28,12 @@ def cmd_execute(conf, args, repo):
     mod_expr    = args.filter[sep_idx + 1:]
     mod         = task.Task.parse_modifications(mod_expr)
 
+    mod_list = []
     for t in repo.tasks_filter(filter_expr):
         t.modify(mod)
-        repo.task_write(t)
+        mod_list.append(TaskWrite(t))
 
-    repo.commit_changes('modify %s' % args.filter)
+    repo.modify(mod_list, 'modify %s' % args.filter)
 
 
 def init_parser(subparsers):

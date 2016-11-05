@@ -13,30 +13,12 @@
 # You should have received a copy of the GNU General Public License along
 # with td. If not, see <http://www.gnu.org/licenses/>.
 
-import argparse
-import sys
+class TaskWrite:
+    task = None
+    def __init__(self, task):
+        self.task = task
 
-from ..repo.repository_mod import TaskDelete
-
-def cmd_execute(conf, args, repo):
-    mod_list = []
-    for t in repo.tasks_filter(args.filter):
-        mod_list.append(TaskDelete(t.uuid))
-
-    repo.modify(mod_list, 'delete %s' % (' '.join(args.filter)))
-
-
-def init_parser(subparsers):
-    parser = subparsers.add_parser('delete')
-    parser.set_defaults(execute = cmd_execute)
-
-    parser.add_argument('filter', nargs = argparse.REMAINDER,
-                        help = 'Tasks to delete')
-
-    return parser
-
-cmd = {
-    'init_parser' : init_parser,
-    'open_repo'   : True,
-}
-
+class TaskDelete:
+    uuid = None
+    def __init__(self, uuid):
+        self.uuid = uuid

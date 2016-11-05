@@ -19,8 +19,10 @@ import json
 import sys
 
 from ..repo import task
+from ..repo.repository_mod import TaskWrite
 
 def cmd_execute(conf, args, repo):
+    mod_list = []
     for line in sys.stdin:
         line = line.rstrip('\n,')
         tw_task = json.loads(line)
@@ -75,9 +77,9 @@ def cmd_execute(conf, args, repo):
 
         if extra:
             td_task.tw_extra = extra
-        repo.task_write(td_task)
+        mod_list.append(TaskWrite(td_task))
 
-    repo.commit_changes('Import Taskwarrior tasks')
+    repo.modify(mod_list, 'Import Taskwarrior tasks')
 
 def init_parser(subparsers):
     parser = subparsers.add_parser('import_tw')

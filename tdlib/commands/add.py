@@ -17,6 +17,7 @@ import argparse
 import datetime
 
 from ..repo import task
+from ..repo.repository_mod import TaskWrite
 
 def cmd_execute(conf, args, repo):
     t = task.Task()
@@ -28,8 +29,7 @@ def cmd_execute(conf, args, repo):
     if args.args:
         t.modify(t.parse_modifications(args.args))
 
-    repo.task_write(t)
-    repo.commit_changes('add %s' % t.text)
+    repo.modify([TaskWrite(t)], 'add %s' % t.text)
 
 def add_init_parser(subparsers):
     parser = subparsers.add_parser('add')

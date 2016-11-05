@@ -17,12 +17,15 @@ import argparse
 import datetime
 import sys
 
+from ..repo.repository_mod import TaskWrite
+
 def cmd_execute(conf, args, repo):
+    mod_list = []
     for t in repo.tasks_filter(args.filter):
         t.completed = True
         t.date_completed = datetime.datetime.now(datetime.timezone.utc)
-        repo.task_write(t)
-    repo.commit_changes('done ' + ' '.join(args.filter))
+        mod_list.append(TaskWrite(t))
+    repo.modify(mod_list, 'done ' + ' '.join(args.filter))
 
 def init_parser(subparsers):
     parser = subparsers.add_parser('done')

@@ -28,6 +28,8 @@ from . import filter as task_filter
 from . import pending
 from . import task
 
+from .repository_mod import TaskWrite, TaskDelete
+
 
 SUPPORTED_VERSION = 0
 
@@ -157,7 +159,7 @@ class Repository:
             self._commit_index(commit_msg)
             self._commit_msgs = []
 
-    def task_write(self, task):
+    def _task_write(self, task):
         path = os.path.join(self._path, 'tasks', task.uuid)
         path_tmp = path + '.tmp'
 
@@ -187,7 +189,7 @@ class Repository:
         self._repo.index.write()
         self._commit_msgs.append('Update task %s' % task.uuid)
 
-    def task_delete(self, task_uuid):
+    def _task_delete(self, task_uuid):
         task_path = os.path.join(self._path, 'tasks', task_uuid)
         if not os.path.isfile(task_path):
             raise KeyError
@@ -198,9 +200,21 @@ class Repository:
         if task_uuid in self._pending:
             del self._pending[task_uuid]
             self._repo.index.add(os.path.relpath(self._pending.path, self._path))
+            self._reload_pending_tasks()
 
         self._repo.index.write()
         self._commit_msgs.append('Delete task %s' % task_uuid)
+
+    def modify(self, mod_list, commit_title):
+        for mod in mod_list:
+            if isinstance(mod, TaskWrite):
+                self._task_write(mod.task)
+            elif isinstance(mod, TaskDelete):
+                self._task_delete(mod.uuid)
+            else:
+                raise TypeError('Unknown repository modification type: %s' % mod)
+
+        self.commit_changes(commit_title)
 
     def _task_list(self):
         ret = []
