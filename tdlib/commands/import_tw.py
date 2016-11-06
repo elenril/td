@@ -18,15 +18,15 @@ import dateutil.parser
 import json
 import sys
 
-from ..repo import task
 from ..repo.repository_mod import TaskWrite
+from ..repo.task           import StandaloneTask
 
 def cmd_execute(conf, args, repo):
     mod_list = []
     for line in sys.stdin:
         line = line.rstrip('\n,')
         tw_task = json.loads(line)
-        td_task = task.Task()
+        td_task = StandaloneTask()
 
         if 'status' in tw_task and tw_task['status'] == 'deleted':
             continue

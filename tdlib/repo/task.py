@@ -29,8 +29,12 @@ class InvalidTagNameError(Exception):
 class _OrderedSet:
     _data = None
 
-    def __init__(self):
+    def __init__(self, other = None):
         self._data = []
+
+        if other is not None:
+            for it in other:
+                self.add(it)
 
     def add(self, item):
         raise NotImplementedError
@@ -60,7 +64,7 @@ class _Tags(_OrderedSet):
     def __str__(self):
         return ' '.join(self._data)
 
-class InvalidDependecyIDError(Exception):
+class InvalidDependencyIDError(Exception):
     id      = None
 
     def __init__(self, id):
@@ -72,17 +76,12 @@ class _Dependencies(_OrderedSet):
             uuid.UUID(dep)
             self._data.append(dep)
         except ValueError:
-            raise InvalidDependecyIDError(dep)
+            raise InvalidDependencyIDError(dep)
 
-class Task:
+
+class _AbstractTask:
     # task UUID as a string
     uuid = None
-
-    # task short ID (non-negative integer), None of not assigned
-    id = None
-
-    # a bool indicating whether the task is completed
-    completed = None
 
     # task description
     text = None
@@ -92,6 +91,9 @@ class Task:
 
     # a set of dependencies of this task
     dependencies = None
+
+    # the task has been completed
+    completed = None
 
     # task creation date, as an aware UTC datetime object
     date_created = None
@@ -108,6 +110,43 @@ class Task:
 
     tw_extra = None
 
+    def __init__(self):
+        self.uuid = str(uuid.uuid4())
+
+        self.completed = False
+
+        self.tags         = _Tags()
+        self.dependencies = _Dependencies()
+
+
+class RepositoryTask(_AbstractTask):
+    # task short ID (non-negative integer), None if not assigned
+    id = None
+
+    # the task depends on at least one other uncompleted task
+    blocked = None
+
+    # at least one other task depends on this one
+    blocking = None
+
+    ### private ###
+    "the repository the task is attached to"
+    _repo = None
+
+    def __init__(self, repo):
+        super().__init__()
+
+        self._repo = repo
+
+        self.blocked  = False
+        self.blocking = False
+
+    @property
+    def urgency(self):
+        return 0.0
+
+
+class StandaloneTask(_AbstractTask):
     ### private ###
     _MOD_TEXT      = 0
     _MOD_TAG_ADD   = 1
@@ -120,15 +159,55 @@ class Task:
     _MOD_DUE       = 8
     _MOD_SCHEDULED = 9
 
-    def __init__(self):
-        self.uuid         = str(uuid.uuid4())
+    def __init__(self, **kwargs):
+        super().__init__(self)
 
-        self.completed    = False
-        self.blocked      = False
-        self.blocking     = False
+        if 'parent' in kwargs:
+            parent = kwargs['parent']
 
-        self.tags         = _Tags()
-        self.dependencies = _Dependencies()
+            self.uuid           = parent.uuid
+            self.text           = parent.text
+            self.tags           = _Tags(parent.tags)
+            self.dependencies   = _Dependencies(parent.dependencies)
+            self.completed      = parent.completed
+            self.date_created   = parent.date_created
+            self.date_completed = parent.date_completed
+            self.date_due       = parent.date_due
+            self.date_scheduled = parent.date_scheduled
+            self.tw_extra       = parent.tw_extra
+
+    @classmethod
+    def parse_modifications(cls, mod_desc):
+        ret = []
+
+        for it in mod_desc:
+            if it.startswith('+'):
+                ret.append((cls._MOD_TAG_ADD, it[1:]))
+            elif it.startswith('-'):
+                ret.append((cls._MOD_TAG_DEL, it[1:]))
+            elif not ':' in it:
+                ret.append((cls._MOD_TEXT, it))
+            else:
+                it, val = it.split(':', maxsplit = 1)
+                if it == 'text':
+                    ret.append((cls._MOD_TEXT, val))
+                elif it == 'tag+':
+                    ret.append((cls._MOD_TAG_ADD, val))
+                elif it == 'tag-':
+                    ret.append((cls._MOD_TAG_DEL, val))
+                elif it == 'tag':
+                    ret.append((cls._MOD_TAG_SET, val.split(',')))
+                elif it == 'created':
+                    ts = dateutil.parser.parse(val)
+                    ret.append((cls._MOD_CREATED, ts))
+                elif it == 'due':
+                    ts = dateutil.parser.parse(val)
+                    ret.append((cls._MOD_DUE, ts))
+                elif it == 'scheduled':
+                    ts = dateutil.parser.parse(val)
+                    ret.append((cls._MOD_SCHEDULED, ts))
+
+        return ret
 
     def modify(self, mod_desc):
         for it, val in mod_desc:
@@ -153,40 +232,3 @@ class Task:
                 self.date_scheduled = val
             else:
                 raise ValueError('Invalid modification code: %d' % it)
-
-    @property
-    def urgency(self):
-        return 0.0
-
-    @staticmethod
-    def parse_modifications(mod_desc):
-        ret = []
-
-        for it in mod_desc:
-            if it.startswith('+'):
-                ret.append((Task._MOD_TAG_ADD, it[1:]))
-            elif it.startswith('-'):
-                ret.append((Task._MOD_TAG_DEL, it[1:]))
-            elif not ':' in it:
-                ret.append((Task._MOD_TEXT, it))
-            else:
-                it, val = it.split(':', maxsplit = 1)
-                if it == 'text':
-                    ret.append((Task._MOD_TEXT, val))
-                elif it == 'tag+':
-                    ret.append((Task._MOD_TAG_ADD, val))
-                elif it == 'tag-':
-                    ret.append((Task._MOD_TAG_DEL, val))
-                elif it == 'tag':
-                    ret.append((Task._MOD_TAG_SET, val.split(',')))
-                elif it == 'created':
-                    ts = dateutil.parser.parse(val)
-                    ret.append((Task._MOD_CREATED, ts))
-                elif it == 'due':
-                    ts = dateutil.parser.parse(val)
-                    ret.append((Task._MOD_DUE, ts))
-                elif it == 'scheduled':
-                    ts = dateutil.parser.parse(val)
-                    ret.append((Task._MOD_SCHEDULED, ts))
-
-        return ret

@@ -16,11 +16,11 @@
 import argparse
 import datetime
 
-from ..repo import task
 from ..repo.repository_mod import TaskWrite
+from ..repo.task           import StandaloneTask
 
 def cmd_execute(conf, args, repo):
-    t = task.Task()
+    t = StandaloneTask()
 
     t.completed = False
 

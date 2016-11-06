@@ -26,9 +26,9 @@ import uuid
 
 from . import filter as task_filter
 from . import pending
-from . import task
 
 from .repository_mod import TaskWrite, TaskDelete
+from .task           import RepositoryTask
 
 
 SUPPORTED_VERSION = 0
@@ -225,7 +225,7 @@ class Repository:
         return ret
 
     def _task_load(self, task_uuid):
-        t = task.Task()
+        t = RepositoryTask(self)
 
         with open(os.path.join(self.path, 'tasks', task_uuid), 'rt') as task_fp:
             data = json.load(task_fp)

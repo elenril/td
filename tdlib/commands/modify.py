@@ -16,8 +16,8 @@
 import argparse
 import sys
 
-from ..repo import task
 from ..repo.repository_mod import TaskWrite
+from ..repo.task           import StandaloneTask
 
 def cmd_execute(conf, args, repo):
     if not '--' in args.filter:
@@ -26,10 +26,11 @@ def cmd_execute(conf, args, repo):
     sep_idx = args.filter.index('--')
     filter_expr = args.filter[:sep_idx]
     mod_expr    = args.filter[sep_idx + 1:]
-    mod         = task.Task.parse_modifications(mod_expr)
+    mod         = StandaloneTask.parse_modifications(mod_expr)
 
     mod_list = []
     for t in repo.tasks_filter(filter_expr):
+        t = StandaloneTask(t)
         t.modify(mod)
         mod_list.append(TaskWrite(t))
 
