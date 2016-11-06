@@ -28,6 +28,8 @@ class _FilterTerm:
     _FILTER_DUE       = 4
     _FILTER_SCHEDULED = 5
     _FILTER_TAG       = 6
+    _FILTER_BLOCKED   = 7
+    _FILTER_BLOCKING  = 8
 
     def __init__(self, term):
         type = None
@@ -41,6 +43,7 @@ class _FilterTerm:
                 type = self._FILTER_UUID
             elif prefix == 'id':
                 type = self._FILTER_ID
+                val  = (int(val),)
             elif prefix == 'text':
                 type = self._FILTER_TEXT
             elif prefix == 'created':
@@ -51,14 +54,25 @@ class _FilterTerm:
                 type = self._FILTER_SCHEDULED
             elif prefix == 'tag':
                 type = self._FILTER_TAG
+                val  = (val,)
+            elif prefix == 'flag':
+                if val == 'blocked':
+                    type = self._FILTER_BLOCKED
+                elif val == 'blocking':
+                    type = self._FILTER_BLOCKING
+                else:
+                    raise ValueError('Unknown flag: %s' % val)
 
-        if type is None and term.isdigit():
-            type = self._FILTER_ID
-            val  = term
+        if type is None:
+            try:
+                val = list(map(int, term.split(',')))
+                type = self._FILTER_ID
+            except ValueError:
+                pass
 
         if type is None and term.startswith('+'):
             type = self._FILTER_TAG
-            val = term[1:]
+            val = term[1:].split(',')
 
         if type is None:
             type = self._FILTER_TEXT
@@ -67,11 +81,14 @@ class _FilterTerm:
         self._type = type
 
         if (type == self._FILTER_UUID or
-            type == self._FILTER_TEXT or
-            type == self._FILTER_TAG):
+            type == self._FILTER_TEXT):
             self._val = val
-        elif type == self._FILTER_ID:
-            self._val = int(val)
+        elif (type == self._FILTER_TAG or
+              type == self._FILTER_ID):
+            self._val = set(val)
+        elif (type == self._FILTER_BLOCKED or
+              type == self._FILTER_BLOCKING):
+            pass
         else:
             self._val = dateutil.parser.parse(val)
 
@@ -79,18 +96,23 @@ class _FilterTerm:
         if self._type == self._FILTER_UUID:
             return task.uuid == self._val
         if self._type == self._FILTER_ID:
-            return task.id == self._val
+            return task.id in self._val
         if self._type == self._FILTER_TEXT:
             return (task.text is not None) and self._val in task.text
+        if self._type == self._FILTER_BLOCKED:
+            return task.blocked
+        if self._type == self._FILTER_BLOCKING:
+            return task.blocking
         if self._type == self._FILTER_TAG:
-            if self._val in task.tags:
-                return True
-
-            taglen = len(self._val)
-            for tag in task.tags:
-                if (tag.startswith(self._val) and
-                    tag[taglen] == '.'):
+            for tag in self._val:
+                if tag in task.tags:
                     return True
+
+                taglen = len(tag)
+                for tag_other in task.tags:
+                    if (tag_other.startswith(tag) and
+                        tag[taglen] == '.'):
+                        return True
 
             return False
 

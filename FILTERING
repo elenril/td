@@ -1,0 +1,36 @@
+Task searching/filtering
+========================
+Several commands accept a "filter expression" that is used to select the tasks
+the command acts upon. This document describes the syntax of those expressions.
+
+The expression is composed of zero or more terms joined together with operators
+and parentheses '()' that override the evaluation order.
+
+The operators are either unary or binary. Unary operators have one operand, the
+subexpression immediately following the operator. Binary operators have two
+operands, the first one preceding the operator, the second one following it.
+Unary operators are:
+- 'not' -- matches if the operand subexpression does not match
+Binary 
+- 'and' -- matches if both operands match
+- 'or'  -- matches if at least one of the operands matches
+
+The base terms are all of the form <key>:<value> and match tasks with property
+<key> equal to <value. Specifically, the base terms are:
+- 'uuid:<uuid>'      -- matches the task with the specified UUID equal to <uuid>
+- 'id:<id>'          -- matches the task with the specified short ID equal to <id>
+- 'text:<text>'      -- matches when the task text contains <text>
+- 'created:<date>'   -- matches when the task creation date is <date>
+- 'due:<date>'       -- matches when the task due date is <date>
+- 'scheduled:<date>' -- matches when the task scheduled date is <date>
+- 'tag:<tag>'        -- matches when the task is tagged with <tag> or its subtag
+
+In addition to the base terms there are the shortcut terms, which allow writing
+some common filters in a shorter way. Those are:
+- '<n1>,<n2>,<n3>,...' -- a comma-separated list of integers <nx>. Equivalent to
+    '( id:<n1> or id:<n2> or id:<n3> ... )', i.e. matches the tasks with the
+    short IDs <n1>, <n2>, <n3> and so on.
+- '+tag1,tag2,...' -- equivalent to '( tag:tag1 or tag:tag2 ... )', i.e. matches
+    the tasks with at least one of the specified tags.
+- '<text>' with <text> not conforming to any of the above shortcuts --
+    equivalent to 'text:<text>'.
