@@ -30,7 +30,7 @@ def cmd_execute(conf, args, repo):
 
     mod_list = []
     for t in repo.tasks_filter(filter_expr):
-        t = StandaloneTask(t)
+        t = StandaloneTask(parent = t)
         t.modify(mod)
         mod_list.append(TaskWrite(t))
 

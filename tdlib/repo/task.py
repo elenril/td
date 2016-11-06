@@ -165,7 +165,7 @@ class StandaloneTask(_AbstractTask):
     _MOD_SCHEDULED = 9
 
     def __init__(self, **kwargs):
-        super().__init__(self)
+        super().__init__()
 
         if 'parent' in kwargs:
             parent = kwargs['parent']
