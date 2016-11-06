@@ -52,14 +52,18 @@ def report_print(out, tasks, columns, sort, col_sep):
     out.write('\n')
 
     # print the tasks
+    reverse = False
     for tf, nb_lines in tasks_formatted:
+        format = term.reverse if reverse else lambda x: x
         for i in range(nb_lines):
+            outline = []
             for w, col in zip(maxw, tf):
                 if i < len(col):
-                    out.write(col[i])
+                    outline.append(col[i])
                     l = len(col[i])
                 else:
                     l = 0
-                out.write(' ' * (w - l))
-                out.write(col_sep)
-            out.write('\n')
+                outline.append(' ' * (w - l))
+                outline.append(col_sep)
+            out.write('%s\n' % format(''.join(outline)))
+        reverse = not reverse
