@@ -253,6 +253,12 @@ class Repository:
         t.uuid      = task_uuid
         t.completed = not task_uuid in self._pending
 
+        t.blocked = False
+        for dep in t.dependencies:
+            if dep in self._pending:
+                t.blocked = True
+                break
+
         if task_uuid in self._ids:
             t.id = self._ids[task_uuid]
 

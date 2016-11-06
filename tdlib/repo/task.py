@@ -129,6 +129,9 @@ class RepositoryTask(_AbstractTask):
     # at least one other task depends on this one
     blocking = None
 
+    # a set of tasks that depend on this one
+    dependents = None
+
     ### private ###
     "the repository the task is attached to"
     _repo = None
@@ -137,6 +140,8 @@ class RepositoryTask(_AbstractTask):
         super().__init__()
 
         self._repo = repo
+
+        self.dependents = _Dependencies()
 
         self.blocked  = False
         self.blocking = False
