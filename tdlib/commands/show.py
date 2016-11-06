@@ -24,45 +24,84 @@ def cmd_execute(conf, args, repo):
     repo = Repository(repo.path)
 
     for t in repo.tasks_filter(args.filter):
-        sys.stdout.write('UUID:\t%s\n' % t.uuid)
+        task_formatted = []
+
+        task_formatted.append(('UUID', (t.uuid,)))
 
         if t.id is not None:
-            sys.stdout.write('ID:\t%d\n' % t.id)
+            task_formatted.append(('ID', (str(t.id),)))
 
-        sys.stdout.write('Status:\t%s\n' % ('completed' if t.completed else 'pending'))
+        if t.completed:
+            status = 'completed'
+        else:
+            status = 'pending'
+            if t.blocked:
+                status += ' blocked'
+
+        task_formatted.append(('Status', (status,)))
 
         if t.text:
-            sys.stdout.write('Text:\t%s\n' % t.text)
+            task_formatted.append(('Text', t.text.split('\n')))
 
         if t.date_created:
             created_localts = t.date_created.astimezone()
-            sys.stdout.write('Created:\t%s\n' % created_localts.isoformat())
+            task_formatted.append(('Created', (created_localts.isoformat(),)))
 
         if t.date_completed:
             completed_localts = t.date_completed.astimezone()
-            sys.stdout.write('Completed:\t%s\n' % completed_localts.isoformat())
+            task_formatted.append(('Completed', (completed_localts.isoformat(),)))
 
         if t.date_due:
             due_localts = t.date_due.astimezone()
-            sys.stdout.write('Due:\t%s\n' % due_localts.isoformat())
+            task_formatted.append(('Due', (due_localts.isoformat(),)))
 
         if t.date_scheduled:
             scheduled_localts = t.date_scheduled.astimezone()
-            sys.stdout.write('Scheduled:\t%s\n' % scheduled_localts.isoformat())
+            task_formatted.append(('Scheduled', (scheduled_localts.isoformat(),)))
 
         if len(t.tags):
-            sys.stdout.write('Tags:\t')
-            for tag in t.tags:
-                sys.stdout.write('%s ' % tag)
-            sys.stdout.write('\n')
+            task_formatted.append(('Tags', (' '.join(t.tags),)))
 
         if len(t.dependencies):
-            sys.stdout.write('Dependencies:\t')
+            deps = []
             for dep in t.dependencies:
-                sys.stdout.write('%s ' % dep)
-            sys.stdout.write('\n')
+                try:
+                    dep_task = repo.tasks_filter(['uuid:%s' % dep])[0]
+                    dep_desc = str(dep_task.id)
+                    if dep_task.text is not None:
+                        dep_desc += ' %s' % (dep_task.text.split('\n')[0])
+                    deps.append(dep_desc)
+                except IndexError:
+                    deps.append(dep)
+            task_formatted.append(('This task depends on', deps))
 
-        sys.stdout.write('\n')
+        if len(t.dependents):
+            deps = []
+            for dep in t.dependents:
+                try:
+                    dep_task = repo.tasks_filter(['uuid:%s' % dep])[0]
+                    dep_desc = str(dep_task.id)
+                    if dep_task.text is not None:
+                        dep_desc += ' %s' % (dep_task.text.split('\n')[0])
+                    deps.append(dep_desc)
+                except IndexError:
+                    deps.append(dep)
+            task_formatted.append(('This task is blocking', deps))
+
+        # compute the required column width
+        maxw = 0
+        for key, val in task_formatted:
+            maxw = max(maxw, len(key))
+
+        for key, lines in task_formatted:
+            for i in range(len(lines)):
+                if i == 0:
+                    sys.stdout.write('%s%s' % (key,  ' ' * (maxw - len(key))))
+                else:
+                    sys.stdout.write(' ' * maxw)
+                sys.stdout.write(' | %s\n' % lines[i])
+
+        sys.stdout.write('=' * 80 + '\n')
 
 
 def init_parser(subparsers):
