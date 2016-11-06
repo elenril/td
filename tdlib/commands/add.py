@@ -15,7 +15,9 @@
 
 import argparse
 import datetime
+import sys
 
+from ..repo.repository     import Repository
 from ..repo.repository_mod import TaskWrite
 from ..repo.task           import StandaloneTask
 
@@ -29,7 +31,15 @@ def cmd_execute(conf, args, repo):
     if args.args:
         t.modify(t.parse_modifications(args.args))
 
+    task_uuid = t.uuid
+
     repo.modify([TaskWrite(t)], 'add %s' % t.text)
+
+    repo = Repository(repo.path)
+
+    task = repo.tasks_filter(['uuid:%s' % task_uuid])[0]
+
+    sys.stdout.write('Added task %d\n' % task.id)
 
 def add_init_parser(subparsers):
     parser = subparsers.add_parser('add')
