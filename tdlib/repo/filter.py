@@ -19,6 +19,7 @@ import uuid
 class _FilterTerm:
     _type = None
     _val  = None
+    _mod  = None
 
     # filter types
     _FILTER_UUID      = 0
@@ -30,6 +31,11 @@ class _FilterTerm:
     _FILTER_TAG       = 6
     _FILTER_BLOCKED   = 7
     _FILTER_BLOCKING  = 8
+    _FILTER_URGENCY   = 9
+
+    # filter modifiers
+    _MOD_ABOVE = 0
+    _MOD_BELOW = 1
 
     def __init__(self, term):
         type = None
@@ -62,6 +68,14 @@ class _FilterTerm:
                     type = self._FILTER_BLOCKING
                 else:
                     raise ValueError('Unknown flag: %s' % val)
+            elif prefix.startswith('urgency'):
+                type = self._FILTER_URGENCY
+                if prefix == 'urgency.below':
+                    self._mod = self._MOD_BELOW
+                elif prefix == 'urgency.above':
+                    self._mod = self._MOD_ABOVE
+                else:
+                    raise ValueError('Unknown urgency modifier: %s' % prefix)
 
         if type is None:
             try:
@@ -89,6 +103,8 @@ class _FilterTerm:
         elif (type == self._FILTER_BLOCKED or
               type == self._FILTER_BLOCKING):
             pass
+        elif (type == self._FILTER_URGENCY):
+            self._val = float(val)
         else:
             self._val = dateutil.parser.parse(val)
 
@@ -103,6 +119,11 @@ class _FilterTerm:
             return task.blocked
         if self._type == self._FILTER_BLOCKING:
             return task.blocking
+        if self._type == self._FILTER_URGENCY:
+            if self._mod == self._MOD_ABOVE:
+                return task.urgency >= self._val
+            elif self._mod == self._MOD_BELOW:
+                return task.urgency <= self._val
         if self._type == self._FILTER_TAG:
             for tag in self._val:
                 if tag in task.tags:

@@ -21,7 +21,7 @@ from ..repo.repository import Repository
 def cmd_execute(conf, args, repo):
     repo.update_ids()
 
-    repo = Repository(repo.path)
+    repo = Repository(repo.path, conf['lib'])
 
     for t in repo.tasks_filter(args.filter):
         task_formatted = []
@@ -42,6 +42,9 @@ def cmd_execute(conf, args, repo):
 
         if t.text:
             task_formatted.append(('Text', t.text.split('\n')))
+
+        if t.urgency is not None:
+            task_formatted.append(('Urgency', (str(t.urgency),)))
 
         if t.date_created:
             created_localts = t.date_created.astimezone()

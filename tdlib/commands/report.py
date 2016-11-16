@@ -22,7 +22,7 @@ from ..utils import report_print
 def _cmd_execute(conf, args, repo, report):
     repo.update_ids()
 
-    repo = Repository(repo.path)
+    repo = Repository(repo.path, conf['lib'])
 
     rc = conf['reports'][report]
 

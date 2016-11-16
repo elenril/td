@@ -18,6 +18,7 @@ import collections
 import datetime
 import dateutil.parser
 import json
+import math
 import os
 import os.path
 import pygit2
@@ -54,6 +55,9 @@ class Repository:
     """the underlying git repo"""
     _repo = None
 
+    """the repository-related config file section"""
+    _config = None
+
     """repository version"""
     _ver  = None
 
@@ -72,8 +76,9 @@ class Repository:
 
     _initialized = False
 
-    def __init__(self, path):
+    def __init__(self, path, config):
         self.path = path
+        self._config = config
 
         try:
             self._repo = pygit2.Repository(path)
@@ -104,6 +109,50 @@ class Repository:
 
         self._initialized = True
 
+    def _calc_urgency(self, task):
+        f = self._config['urgency.factors']
+
+        val = 0.0
+
+        val += float(f['dependents']) * math.log2(1.0 + len(task.dependents))
+
+        if task.blocked:
+            val += float(f['blocked'])
+
+        if task.date_scheduled is not None:
+            high = float(f['scheduled_high'])
+            low  = float(f['scheduled_low'])
+            at   = int(f['scheduled_activetime'])
+
+            now = datetime.datetime.now(datetime.timezone.utc)
+            delta = (now - task.date_scheduled).total_seconds()
+
+            if at != 0:
+                slope = (high - low) / at
+                val += max(low, min(high, slope * delta + high))
+            else:
+                val += high if delta >= 0 else low
+
+        if task.date_due is not None:
+            high = float(f['due_high'])
+            pre  = int(f['due_time_pre'])
+            post = int(f['due_time_post'])
+
+            now = datetime.datetime.now(datetime.timezone.utc)
+            delta = (now - task.date_due).total_seconds()
+
+            if (pre + post) != 0:
+                slope  = (pre + post) / high
+                offset = pre * slope
+                val += max(0.0, min(high, slope * delta + offset))
+            else:
+                val += high if delta >= 0 else 0.0
+
+        for tag in f['tags']:
+            if tag in task.tags:
+                val += float(f['tags'][tag])
+
+        task.urgency = val
 
     def _load_short_ids(self):
         with open(os.path.join(self.path, 'ids'), 'r') as ids_file:

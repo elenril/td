@@ -79,7 +79,7 @@ def main(argv):
     args = parser.parse_args(argv[1:])
 
     repo = None
-    repo = tdlib.repo.repository.Repository(conf['repo_path'])
+    repo = tdlib.repo.repository.Repository(conf['repo_path'], conf['lib'])
 
     args.execute(conf, args, repo)
 

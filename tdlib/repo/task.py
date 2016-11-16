@@ -132,6 +132,8 @@ class RepositoryTask(_AbstractTask):
     # a set of tasks that depend on this one
     dependents = None
 
+    urgency = None
+
     ### private ###
     "the repository the task is attached to"
     _repo = None
@@ -145,10 +147,6 @@ class RepositoryTask(_AbstractTask):
 
         self.blocked  = False
         self.blocking = False
-
-    @property
-    def urgency(self):
-        return 0.0
 
 
 class StandaloneTask(_AbstractTask):

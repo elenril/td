@@ -57,6 +57,42 @@ _config_defaults = {
             'next.sort'        : 'urgency-',
         },
     ),
+
+
+
+    'lib' : {
+        'urgency' : {
+            'factors' : {
+                # the factor for the task with one dependent task
+                # grows logarithmically with more dependents
+                'dependents' :  8.0,
+                # the factor for depending on at least one pending task
+                'blocked'    : -5.0,
+
+                # tasks that have a scheduled time get the following urgency
+                # factor:
+                #   - 'high' factor at the scheduled time and later
+                #   - 'low' factor at 'activetime' seconds before the scheduled
+                #     time and earlier
+                #   - linearly interpolated between the above two in the
+                #     intermediate times
+                'scheduled_high'       :  20.0,
+                'scheduled_low'        : -10.0,
+                'scheduled_activetime' : 86400,
+
+                # tasks that have a due time get the following urgency factor:
+                #   - zero at 'time_pre' seconds before the due time
+                #   - 'high' at 'time_post' seconds after the due time
+                #   - linearly interpolated between the above two in the
+                #     intermediate times
+                'due_high'      : 10.0,
+                'due_time_pre'  : 1209600,
+                'due_time_post' : 604800,
+
+                'tags' : None,
+            },
+        },
+    },
 }
 
 class InvalidConfigItem(Exception):
