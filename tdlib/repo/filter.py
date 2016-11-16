@@ -129,12 +129,6 @@ class _FilterTerm:
                 if tag in task.tags:
                     return True
 
-                taglen = len(tag)
-                for tag_other in task.tags:
-                    if (tag_other.startswith(tag) and
-                        tag[taglen] == '.'):
-                        return True
-
             return False
 
         raise NotImplementedError

@@ -61,6 +61,19 @@ class _Tags(_OrderedSet):
         if not tag in self._data:
             self._data.append(tag)
 
+    def __contains__(self, tag):
+        if tag in self._data:
+            return True
+
+        taglen = len(tag)
+
+        for tag_other in self._data:
+            if (tag_other.startswith(tag) and
+                tag_other[taglen] == '.'):
+                return True
+
+        return False
+
     def __str__(self):
         return ' '.join(self._data)
 
