@@ -23,7 +23,7 @@ from ..repo.task           import StandaloneTask
 def cmd_execute(conf, args, repo):
     mod_list = []
     for t in repo.tasks_filter(args.filter):
-        t = StandaloneTask(t)
+        t = StandaloneTask(parent = t)
         t.completed = True
         t.date_completed = datetime.datetime.now(datetime.timezone.utc)
         mod_list.append(TaskWrite(t))
