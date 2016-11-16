@@ -104,7 +104,7 @@ def cmd_execute(conf, args, repo):
         sys.stdout.write('=' * 80 + '\n')
 
 
-def init_parser(subparsers):
+def init_parser(config, subparsers):
     parser = subparsers.add_parser('show')
     parser.set_defaults(execute = cmd_execute)
 

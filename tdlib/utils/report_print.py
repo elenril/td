@@ -15,12 +15,22 @@
 
 import blessed
 
-def report_print(out, tasks, columns, sort, col_sep):
+def report_print(config, out,
+                 tasks, columns, sort, col_sep):
     # sort the task list
-    tasks = sorted(tasks, key = lambda task, sort = sort: getattr(task, sort))
+    if sort.endswith('+'):
+        sort_reverse = False
+    elif sort.endswith('-'):
+        sort_reverse = True
+    else:
+        raise ValueError('Invalid sorting specification: %s' % sort)
+    sort = sort[:-1]
+
+    tasks = sorted(tasks, key = lambda task, sort = sort: getattr(task, sort),
+                   reverse = sort_reverse)
 
     # compute the required width for the header
-    maxw            = [0] * len(columns)
+    maxw = [0] * len(columns)
     for i, (col, label) in enumerate(columns):
         maxw[i] = max(maxw[i], len(label))
 

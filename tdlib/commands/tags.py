@@ -26,7 +26,7 @@ def cmd_execute(conf, args, repo):
         sys.stdout.write('%s\n' % tag)
 
 
-def init_parser(subparsers):
+def init_parser(config, subparsers):
     parser = subparsers.add_parser('tags')
     parser.set_defaults(execute = cmd_execute)
 

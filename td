@@ -35,7 +35,7 @@ def _read_config(config_path):
         with open(config_path, 'r') as cf:
             for line in cf:
                 line = line.strip()
-                if line.startswith('#'):
+                if len(line) == 0 or line.startswith('#'):
                     continue
 
                 entry, val = line.split('=', maxsplit = 1)
@@ -43,7 +43,7 @@ def _read_config(config_path):
 
     return conf
 
-def main(argv):
+def _init_config(argv):
     parser = argparse.ArgumentParser(prog = argv[0])
 
     config_path = None
@@ -56,19 +56,30 @@ def main(argv):
     parser.add_argument('-c', '--config', default = config_path,
                         help = 'Path to the config file.')
 
+    parser.add_argument('dummy', nargs = argparse.REMAINDER)
+
+    args = parser.parse_args(argv[1:])
+
+    return _read_config(args.config)
+
+def main(argv):
+    # get the configuration, so we have a list of defined reports
+    conf = _init_config(argv)
+
+    parser = argparse.ArgumentParser(prog = argv[0])
+
+    parser.add_argument('-c', '--config', help = 'Path to the config file.')
+
     parser.set_defaults(execute = lambda conf, args, repo, parser = parser: parser.print_usage())
 
     subparsers = parser.add_subparsers(dest = 'parser')
     for cmd_dict in tdlib.commands.commands.values():
-        cmd_dict['init_parser'](subparsers)
+        cmd_dict['init_parser'](conf, subparsers)
 
     args = parser.parse_args(argv[1:])
 
-    conf = _read_config(args.config)
-
     repo = None
-    if args.parser and tdlib.commands.commands[args.parser]['open_repo']:
-        repo = tdlib.repo.repository.Repository(conf['repo_path'])
+    repo = tdlib.repo.repository.Repository(conf['repo_path'])
 
     args.execute(conf, args, repo)
 

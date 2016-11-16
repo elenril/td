@@ -81,7 +81,7 @@ def cmd_execute(conf, args, repo):
 
     repo.modify(mod_list, 'Import Taskwarrior tasks')
 
-def init_parser(subparsers):
+def init_parser(config, subparsers):
     parser = subparsers.add_parser('import_tw')
     parser.set_defaults(execute = cmd_execute)
 

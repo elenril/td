@@ -41,7 +41,7 @@ def cmd_execute(conf, args, repo):
 
     sys.stdout.write('Added task %d\n' % task.id)
 
-def add_init_parser(subparsers):
+def add_init_parser(config, subparsers):
     parser = subparsers.add_parser('add')
     parser.set_defaults(execute = cmd_execute)
 

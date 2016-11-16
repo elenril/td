@@ -18,7 +18,7 @@ from ..repo import repository
 def cmd_execute(conf, args, repo):
     repository.init(conf['repo_path'])
 
-def cmd_init_parser(subparsers):
+def cmd_init_parser(config, subparsers):
     parser = subparsers.add_parser('init')
     parser.set_defaults(execute = cmd_execute)
 

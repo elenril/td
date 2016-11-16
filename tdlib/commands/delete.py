@@ -26,7 +26,7 @@ def cmd_execute(conf, args, repo):
     repo.modify(mod_list, 'delete %s' % (' '.join(args.filter)))
 
 
-def init_parser(subparsers):
+def init_parser(config, subparsers):
     parser = subparsers.add_parser('delete')
     parser.set_defaults(execute = cmd_execute)
 

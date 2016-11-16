@@ -29,7 +29,7 @@ def cmd_execute(conf, args, repo):
         mod_list.append(TaskWrite(t))
     repo.modify(mod_list, 'done ' + ' '.join(args.filter))
 
-def init_parser(subparsers):
+def init_parser(config, subparsers):
     parser = subparsers.add_parser('done')
     parser.set_defaults(execute = cmd_execute)
 
