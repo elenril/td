@@ -21,13 +21,15 @@ from ..repo.repository_mod import TaskWrite
 from ..repo.task           import StandaloneTask
 
 def cmd_execute(conf, args, repo):
+    repo_state = repo.load()
+
     mod_list = []
-    for t in repo.tasks_filter(args.filter):
+    for t in repo_state.tasks_filter(args.filter):
         t = StandaloneTask(parent = t)
         t.completed = True
         t.date_completed = datetime.datetime.now(datetime.timezone.utc)
         mod_list.append(TaskWrite(t))
-    repo.modify(mod_list, 'done ' + ' '.join(args.filter))
+    repo_state.modify(mod_list, 'done ' + ' '.join(args.filter))
 
 def init_parser(config, subparsers):
     parser = subparsers.add_parser('done')

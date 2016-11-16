@@ -33,11 +33,11 @@ def cmd_execute(conf, args, repo):
 
     task_uuid = t.uuid
 
-    repo.modify([TaskWrite(t)], 'add %s' % t.text)
+    repo_state = repo.load()
+    repo_state.modify([TaskWrite(t)], 'add %s' % t.text)
 
-    repo = Repository(repo.path, conf['lib'])
-
-    task = repo.tasks_filter(['uuid:%s' % task_uuid])[0]
+    repo_state = repo.load()
+    task = repo_state.tasks_filter(['uuid:%s' % task_uuid])[0]
 
     sys.stdout.write('Added task %d\n' % task.id)
 

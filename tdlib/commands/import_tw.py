@@ -22,6 +22,8 @@ from ..repo.repository_mod import TaskWrite
 from ..repo.task           import StandaloneTask
 
 def cmd_execute(conf, args, repo):
+    repo_state = repo.load()
+
     mod_list = []
     for line in sys.stdin:
         line = line.rstrip('\n,')
@@ -79,7 +81,7 @@ def cmd_execute(conf, args, repo):
             td_task.tw_extra = extra
         mod_list.append(TaskWrite(td_task))
 
-    repo.modify(mod_list, 'Import Taskwarrior tasks')
+    repo_state.modify(mod_list, 'Import Taskwarrior tasks')
 
 def init_parser(config, subparsers):
     parser = subparsers.add_parser('import_tw')

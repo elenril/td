@@ -28,13 +28,15 @@ def cmd_execute(conf, args, repo):
     mod_expr    = args.filter[sep_idx + 1:]
     mod         = StandaloneTask.parse_modifications(mod_expr)
 
+    repo_state = repo.load()
+
     mod_list = []
-    for t in repo.tasks_filter(filter_expr):
+    for t in repo_state.tasks_filter(filter_expr):
         t = StandaloneTask(parent = t)
         t.modify(mod)
         mod_list.append(TaskWrite(t))
 
-    repo.modify(mod_list, 'modify %s' % args.filter)
+    repo_state.modify(mod_list, 'modify %s' % args.filter)
 
 
 def init_parser(config, subparsers):

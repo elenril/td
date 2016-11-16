@@ -21,9 +21,9 @@ from ..repo.repository import Repository
 def cmd_execute(conf, args, repo):
     repo.update_ids()
 
-    repo = Repository(repo.path, conf['lib'])
+    repo_state = repo.load()
 
-    for t in repo.tasks_filter(args.filter):
+    for t in repo_state.tasks_filter(args.filter):
         task_formatted = []
 
         task_formatted.append(('UUID', (t.uuid,)))
@@ -69,7 +69,7 @@ def cmd_execute(conf, args, repo):
             deps = []
             for dep in t.dependencies:
                 try:
-                    dep_task = repo.tasks_filter(['uuid:%s' % dep])[0]
+                    dep_task = repo_state.tasks_filter(['uuid:%s' % dep])[0]
                     dep_desc = str(dep_task.id)
                     if dep_task.text is not None:
                         dep_desc += ' %s' % (dep_task.text.split('\n')[0])
@@ -82,7 +82,7 @@ def cmd_execute(conf, args, repo):
             deps = []
             for dep in t.dependents:
                 try:
-                    dep_task = repo.tasks_filter(['uuid:%s' % dep])[0]
+                    dep_task = repo_state.tasks_filter(['uuid:%s' % dep])[0]
                     dep_desc = str(dep_task.id)
                     if dep_task.text is not None:
                         dep_desc += ' %s' % (dep_task.text.split('\n')[0])

@@ -17,8 +17,10 @@ import argparse
 import sys
 
 def cmd_execute(conf, args, repo):
+    repo_state = repo.load()
+
     tags = set()
-    for task in repo.tasks_filter([]):
+    for task in repo_state.tasks_filter([]):
         for tag in task.tags:
             tags.add(tag)
 

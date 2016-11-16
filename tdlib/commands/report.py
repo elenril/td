@@ -22,7 +22,7 @@ from ..utils import report_print
 def _cmd_execute(conf, args, repo, report):
     repo.update_ids()
 
-    repo = Repository(repo.path, conf['lib'])
+    repo_state = repo.load()
 
     rc = conf['reports'][report]
 
@@ -37,7 +37,7 @@ def _cmd_execute(conf, args, repo, report):
     else:
         filter = ''
 
-    tasks = list(repo.tasks_filter(filter))
+    tasks = list(repo_state.tasks_filter(filter))
 
     report_print.report_print(conf, sys.stdout, tasks, columns, rc['sort'], ' ')
 

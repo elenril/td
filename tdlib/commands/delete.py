@@ -19,11 +19,13 @@ import sys
 from ..repo.repository_mod import TaskDelete
 
 def cmd_execute(conf, args, repo):
+    repo_state = repo.load()
+
     mod_list = []
-    for t in repo.tasks_filter(args.filter):
+    for t in repo_state.tasks_filter(args.filter):
         mod_list.append(TaskDelete(t.uuid))
 
-    repo.modify(mod_list, 'delete %s' % (' '.join(args.filter)))
+    repo_state.modify(mod_list, 'delete %s' % (' '.join(args.filter)))
 
 
 def init_parser(config, subparsers):
