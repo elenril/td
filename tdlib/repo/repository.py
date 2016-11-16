@@ -45,6 +45,9 @@ class UnsupportedVersionError(Exception):
 class DirtyRepositoryError(Exception):
     pass
 
+class RepositoryStateModifiedError(Exception):
+    pass
+
 class Repository:
     ### public ###
 
@@ -140,6 +143,8 @@ class _RepositoryState(_RepositoryStateBase):
     """a dict of { task uuid : short id }"""
     _ids = None
 
+    _modified = None
+
     """Task fields to pack into JSON"""
     _field_maps = ('text',)
     _date_fields = ('date_created', 'date_completed', 'date_due', 'date_scheduled')
@@ -149,6 +154,8 @@ class _RepositoryState(_RepositoryStateBase):
 
         self.parent  = parent
         self._config = config
+
+        self._modified = False
 
         self._load_short_ids()
 
@@ -342,6 +349,9 @@ class _RepositoryState(_RepositoryStateBase):
         self._commit_msgs.append('Delete task %s' % task_uuid)
 
     def modify(self, mod_list, commit_title):
+        if self._modified:
+            raise RepositoryStateModifiedError
+
         for mod in mod_list:
             if isinstance(mod, TaskWrite):
                 self._task_write(mod.task)
@@ -351,6 +361,8 @@ class _RepositoryState(_RepositoryStateBase):
                 raise TypeError('Unknown repository modification type: %s' % mod)
 
         self._commit_changes(commit_title)
+
+        self._modified = True
 
     def _task_list(self):
         ret = []
@@ -363,6 +375,9 @@ class _RepositoryState(_RepositoryStateBase):
         return ret
 
     def tasks_filter(self, filter_args):
+        if self._modified:
+            raise RepositoryStateModifiedError
+
         f = task_filter.TaskFilter(filter_args)
 
         ret = []
