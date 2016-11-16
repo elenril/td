@@ -22,7 +22,7 @@ def cmd_execute(conf, args, repo):
         for tag in task.tags:
             tags.add(tag)
 
-    for tag in tags:
+    for tag in sorted(tags):
         sys.stdout.write('%s\n' % tag)
 
 
