@@ -62,9 +62,10 @@ def report_print(config, out,
     out.write('\n')
 
     # print the tasks
-    reverse = False
+    alternate = False
+    alternate_format = getattr(term, 'on_' + config['colors.alternate_bg'])
     for tf, nb_lines in tasks_formatted:
-        format = term.reverse if reverse else lambda x: x
+        format = alternate_format if alternate else lambda x: x
         for i in range(nb_lines):
             outline = []
             for w, col in zip(maxw, tf):
@@ -76,4 +77,4 @@ def report_print(config, out,
                 outline.append(' ' * (w - l))
                 outline.append(col_sep)
             out.write('%s\n' % format(''.join(outline)))
-        reverse = not reverse
+        alternate = not alternate

@@ -34,6 +34,10 @@ class _ConfigSectionTemplate:
 _config_defaults = {
     'repo_path' : os.path.join(xdg.BaseDirectory.xdg_data_home, common_defs.PROGNAME),
 
+    'colors' : {
+        'alternate_bg' : 'bright_black',
+    },
+
     'reports' : _ConfigSectionTemplate(
         {
             'description' : '',
