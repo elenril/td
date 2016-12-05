@@ -163,18 +163,6 @@ class RepositoryTask(_AbstractTask):
 
 
 class StandaloneTask(_AbstractTask):
-    ### private ###
-    _MOD_TEXT      = 0
-    _MOD_TAG_ADD   = 1
-    _MOD_TAG_DEL   = 2
-    _MOD_TAG_SET   = 3
-    #_MOD_DEP_ADD   = 4 TODO
-    #_MOD_DEP_DEL   = 5
-    _MOD_CREATED   = 6
-    _MOD_COMPLETED = 7
-    _MOD_DUE       = 8
-    _MOD_SCHEDULED = 9
-
     def __init__(self, **kwargs):
         super().__init__()
 
@@ -192,59 +180,116 @@ class StandaloneTask(_AbstractTask):
             self.date_scheduled = parent.date_scheduled
             self.tw_extra       = parent.tw_extra
 
-    @classmethod
-    def parse_modifications(cls, mod_desc):
-        ret = []
+
+class TaskModification:
+    _repo_state = None
+    _mod        = None
+
+    ### private ###
+    _MOD_TEXT      = 0
+    _MOD_TAG_ADD   = 1
+    _MOD_TAG_DEL   = 2
+    _MOD_TAG_SET   = 3
+    _MOD_DEP_ADD   = 4
+    _MOD_DEP_DEL   = 5
+    _MOD_DEP_SET   = 6
+    _MOD_CREATED   = 7
+    _MOD_COMPLETED = 8
+    _MOD_DUE       = 9
+    _MOD_SCHEDULED = 10
+
+    def __init__(self, repo_state, mod_desc):
+        self._repo_state = repo_state
+
+        self._mod = []
 
         for it in mod_desc:
             if it.startswith('+'):
-                ret.append((cls._MOD_TAG_ADD, it[1:]))
+                self._mod.append((self._MOD_TAG_ADD, it[1:]))
             elif it.startswith('-'):
-                ret.append((cls._MOD_TAG_DEL, it[1:]))
+                self._mod.append((self._MOD_TAG_DEL, it[1:]))
             elif not ':' in it:
-                ret.append((cls._MOD_TEXT, it))
+                self._mod.append((self._MOD_TEXT, it))
             else:
                 it, val = it.split(':', maxsplit = 1)
                 if it == 'text':
-                    ret.append((cls._MOD_TEXT, val))
+                    self._mod.append((self._MOD_TEXT, val))
                 elif it == 'tag+':
-                    ret.append((cls._MOD_TAG_ADD, val))
+                    self._mod.append((self._MOD_TAG_ADD, val))
                 elif it == 'tag-':
-                    ret.append((cls._MOD_TAG_DEL, val))
+                    self._mod.append((self._MOD_TAG_DEL, val))
                 elif it == 'tag':
-                    ret.append((cls._MOD_TAG_SET, val.split(',')))
+                    self._mod.append((self._MOD_TAG_SET, val.split(',')))
+                elif it == 'dep+':
+                    self._mod.append((self._MOD_DEP_ADD, self._parse_deps(val)))
+                elif it == 'dep-':
+                    self._mod.append((self._MOD_DEP_DEL, self._parse_deps(val)))
+                elif it == 'dep':
+                    self._mod.append((self._MOD_DEP_SET, self._parse_deps(val)))
                 elif it == 'created':
                     ts = dateutil.parser.parse(val)
-                    ret.append((cls._MOD_CREATED, ts))
+                    self._mod.append((self._MOD_CREATED, ts))
                 elif it == 'due':
                     ts = dateutil.parser.parse(val)
-                    ret.append((cls._MOD_DUE, ts))
+                    self._mod.append((self._MOD_DUE, ts))
                 elif it == 'scheduled':
                     ts = dateutil.parser.parse(val)
-                    ret.append((cls._MOD_SCHEDULED, ts))
+                    self._mod.append((self._MOD_SCHEDULED, ts))
 
+    def _parse_deps(self, deps):
+        ret = []
+        for dep in deps.split(','):
+            if dep.isdigit():
+                ret.append(self._resolve_dep(int(dep)))
+            else:
+                ret.append(dep)
         return ret
 
-    def modify(self, mod_desc):
-        for it, val in mod_desc:
+    def _resolve_dep(self, id):
+        tasks = list(self._repo_state.tasks_filter(['id:%d' % id]))
+        if len(tasks) > 1:
+            raise ValueError('More than one task witha a given short ID %d' % id)
+        elif len(tasks) == 0:
+            raise ValueError('No task with short ID %d' % id)
+
+        return tasks[0].uuid
+
+    def modify(self, task_orig):
+        task = StandaloneTask(parent = task_orig)
+
+        for it, val in self._mod:
             if it == self._MOD_TEXT:
-                self.text = val
+                task.text = val
             elif it == self._MOD_TAG_ADD:
-                self.tags.add(val)
+                task.tags.add(val)
             elif it == self._MOD_TAG_DEL:
-                if val in self.tags:
-                    del self.tags[val]
+                if val in task.tags:
+                    del task.tags[val]
             elif it == self._MOD_TAG_SET:
-                self.tags = _Tags()
+                task.tags = _Tags()
                 for tag in val:
-                    self.tags.add(tag)
+                    task.tags.add(tag)
+            elif it == self._MOD_DEP_ADD:
+                for dep in val:
+                    task.dependencies.add(dep)
+            elif it == self._MOD_DEP_DEL:
+                for dep in val:
+                    if dep in task.dependencies:
+                        del task.dependencies[dep]
+            elif it == self._MOD_DEP_SET:
+                for dep in task.dependencies:
+                    del task.dependencies[dep]
+                for dep in val:
+                    task.dependencies.add(dep)
             elif it == self._MOD_CREATED:
-                self.date_created = val
+                task.date_created = val
             elif it == self._MOD_COMPLETED:
-                self.date_completed = val
+                task.date_completed = val
             elif it == self._MOD_DUE:
-                self.date_due = val
+                task.date_due = val
             elif it == self._MOD_SCHEDULED:
-                self.date_scheduled = val
+                task.date_scheduled = val
             else:
                 raise ValueError('Invalid modification code: %d' % it)
+
+        return task

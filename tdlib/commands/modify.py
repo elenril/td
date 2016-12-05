@@ -17,23 +17,22 @@ import argparse
 import sys
 
 from ..repo.repository_mod import TaskWrite
-from ..repo.task           import StandaloneTask
+from ..repo.task           import TaskModification
 
 def cmd_execute(conf, args, repo):
     if not '--' in args.filter:
         raise ValueError('The filter and the modifier need to be separated by "--"')
 
+    repo_state = repo.load()
+
     sep_idx = args.filter.index('--')
     filter_expr = args.filter[:sep_idx]
     mod_expr    = args.filter[sep_idx + 1:]
-    mod         = StandaloneTask.parse_modifications(mod_expr)
-
-    repo_state = repo.load()
+    mod         = TaskModification(repo_state, mod_expr)
 
     mod_list = []
     for t in repo_state.tasks_filter(filter_expr):
-        t = StandaloneTask(parent = t)
-        t.modify(mod)
+        t = mod.modify(t)
         mod_list.append(TaskWrite(t))
 
     repo_state.modify(mod_list, 'modify %s' % args.filter)

@@ -19,9 +19,11 @@ import sys
 
 from ..repo.repository     import Repository
 from ..repo.repository_mod import TaskWrite
-from ..repo.task           import StandaloneTask
+from ..repo.task           import StandaloneTask, TaskModification
 
 def cmd_execute(conf, args, repo):
+    repo_state = repo.load()
+
     t = StandaloneTask()
 
     t.completed = False
@@ -29,11 +31,11 @@ def cmd_execute(conf, args, repo):
     t.date_created = datetime.datetime.now(datetime.timezone.utc)
 
     if args.args:
-        t.modify(t.parse_modifications(args.args))
+        mod = TaskModification(repo_state, args.args)
+        t = mod.modify(t)
 
     task_uuid = t.uuid
 
-    repo_state = repo.load()
     repo_state.modify([TaskWrite(t)], 'add %s' % t.text)
 
     repo_state = repo.load()
