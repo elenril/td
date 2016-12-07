@@ -14,6 +14,8 @@
 # with td. If not, see <http://www.gnu.org/licenses/>.
 
 
+import datetime
+import dateutil
 import string
 import uuid
 import unicodedata
@@ -227,13 +229,13 @@ class TaskModification:
                 elif it == 'dep':
                     self._mod.append((self._MOD_DEP_SET, self._parse_deps(val)))
                 elif it == 'created':
-                    ts = dateutil.parser.parse(val)
+                    ts = self._parse_date(val)
                     self._mod.append((self._MOD_CREATED, ts))
                 elif it == 'due':
-                    ts = dateutil.parser.parse(val)
+                    ts = self._parse_date(val)
                     self._mod.append((self._MOD_DUE, ts))
                 elif it == 'scheduled':
-                    ts = dateutil.parser.parse(val)
+                    ts = self._parse_date(val)
                     self._mod.append((self._MOD_SCHEDULED, ts))
 
     def _parse_deps(self, deps):
@@ -253,6 +255,12 @@ class TaskModification:
             raise ValueError('No task with short ID %d' % id)
 
         return tasks[0].uuid
+
+    def _parse_date(self, datestr):
+        date = dateutil.parser.parse(datestr)
+        if date.tzinfo is None:
+            date = date.replace(tzinfo = dateutil.tz.tzlocal())
+        return date.astimezone(datetime.timezone.utc)
 
     def modify(self, task_orig):
         task = StandaloneTask(parent = task_orig)
