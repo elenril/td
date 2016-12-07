@@ -11,7 +11,7 @@ subexpression immediately following the operator. Binary operators have two
 operands, the first one preceding the operator, the second one following it.
 Unary operators are:
 - 'not' -- matches if the operand subexpression does not match
-Binary 
+Binary
 - 'and' -- matches if both operands match
 - 'or'  -- matches if at least one of the operands matches
 
