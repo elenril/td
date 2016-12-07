@@ -1,0 +1,40 @@
+Overview
+========
+
+TD is a project for task/todo list management. It consists of:
+- A specification describing how tasks are stored in a repository. It is
+  intended to be stable, so that other independent tools can be written to
+  manipulate the tasks.
+- A Python library for accessing the task repository compliant to the above
+  specification.
+- A CLI tool for managing tasks based on this library.
+
+Several aspects of TD are strongly inspired by the Taskwarrior project
+(https://taskwarrior.org/). See a following section for a more detailed
+treatment of the differences.
+
+TD vs. Taskwarrior
+==================
+TD has very similar goals to the Taskwarrior project -- both are text-based
+command line task managers. So naturally one must ask why does TD exist and why
+did its author not improve Taskwarrior instead.
+
+It is the view of the author of TD that Taskwarrior, though a great tool doing
+many things right, has some fundamental flaws that cannot be fixed by
+incremental improvements. The main ones are:
+- The choice of language -- TD's author strongly dislikes C++ and believes it is
+  too low-level for such a project.
+- The way the tasks are stored is problematic in many ways:
+    * The storage format is not specified/documented and the only proper way to
+      manipulate the tasks is with the task tool, which is problematic for
+      building GUI frontends.
+    * The storage format is unfriendly toward standard text processing tools.
+    * Full history, crucial for this kind of project, is not preserved. While it
+      is possible to use version control tools, such as git, to preserve full
+      history, the task tool is not designed for it. Such history is then mostly
+      unreadable.
+    * The official recommended way of synchronization between multiple machines
+      is the dedicated taskd server. This means additional complexity and an
+      extended attack surface, bad for security and usability.
+- Taskwarrior is beginning to suffer from feature creep, adding features that
+  should more appropriately be handled by external tools.
