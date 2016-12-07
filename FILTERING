@@ -24,6 +24,12 @@ The base terms are all of the form <key>:<value> and match tasks with property
 - 'due:<date>'       -- matches when the task due date is <date>
 - 'scheduled:<date>' -- matches when the task scheduled date is <date>
 - 'tag:<tag>'        -- matches when the task is tagged with <tag> or its subtag
+- 'flag:blocked'     -- matches when the task is blocked (i.e. it depends on at
+                        least one pending task)
+- 'flag:blocking'    -- matches when the task is blocking (i.e. when at least
+                        one pending task depends on it)
+- 'urgency.above:<val>' -- matches when the task's urgency is above/below <val>
+  'urgency.below:<val>'
 
 In addition to the base terms there are the shortcut terms, which allow writing
 some common filters in a shorter way. Those are:
